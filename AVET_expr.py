@@ -38,7 +38,7 @@ if __name__ == '__main__':
     # Rest of your code remains the same
     measure = "euclidean" # cosine or euclidean
     
-    methods = ["bio_hash","in_avet","bi_avet","avet"] # avet or bi_avet or in_avet 
+    methods = ["baseline","bio_hash","in_avet","bi_avet","avet"] # avet or bi_avet or in_avet 
     # methods = ["in_avet"]
     times = 5
     seed = [1,2,3,4,5]
@@ -54,6 +54,7 @@ if __name__ == '__main__':
         elif method == 'bi_avet': measure = "hamming"
         elif method == 'in_avet': measure = "jaccard" 
         elif method == 'bio_hash': measure = "hamming"
+        elif method == 'baseline': measure = "euclidean"
         for data_type in datasets:
 
             if data_type == "fingerprint":
