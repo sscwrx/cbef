@@ -23,13 +23,21 @@ def log_experiment_results(logger, eer_list, optimal_thr_list, dataset):
     logger.info("#" * 100)
 
 if __name__ == '__main__':
+    # Create logs directory if it doesn't exist
+    logs_dir = Path("logs")
+    logs_dir.mkdir(exist_ok=True)
+
+    # Create timestamp directory inside logs
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    experiment_dir = logs_dir / f"experiment_{timestamp}"
+    experiment_dir.mkdir(exist_ok=True)
 
     # Configure logging to output to both file and console
     logging.basicConfig(
         level=logging.INFO,
         format='%(message)s',
         handlers=[
-            logging.FileHandler(f'chaos_IoM_results_{datetime.now().strftime("%Y%m%d-%H%M%S")}.log'),
+            logging.FileHandler(experiment_dir / f'results_{timestamp}.log'),
             logging.StreamHandler()
         ]
     )
@@ -102,4 +110,4 @@ if __name__ == '__main__':
 
         # Save all experiment results at the end
         df = pd.DataFrame(table_results, columns=["Dataset", "Mean EER"])
-        df.to_csv(f"{method}_{measure}_seed_{seed}results_{datetime.now().strftime('%Y%m%d-%H%M%S')}.csv", index=False)
+        df.to_csv(experiment_dir / f"{method}_{measure}_seed_{seed}results_{timestamp}.csv", index=False)

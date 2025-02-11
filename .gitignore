@@ -5,3 +5,4 @@ protectedTemplates
 *.ipynb
 *.mat
 *.npz
+*.csv
