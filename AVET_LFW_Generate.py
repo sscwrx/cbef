@@ -3,7 +3,7 @@ import scipy as sp
 import time
 import os
 from tqdm import tqdm
-from AVET_imp import absolute_value_equations_transform,bi_avet, in_avet
+from AVET_imp import absolute_value_equations_transform,bi_avet, in_avet,biohash
 from pathlib import Path
 from AVET_LFW_Matching import perform_matching
 def generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="avet"):
@@ -37,8 +37,9 @@ def generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="a
                     elif method == "bi_avet":
                         protected_template = bi_avet(face_vector,seed)
                     elif method == "in_avet":
-                        protected_template = in_avet(face_vector,seed)
-                    
+                        protected_template = in_avet(face_vector,k=300,g=16,seed=seed)
+                    elif method == "bio_hash":
+                        protected_template = biohash(fingerprint_vector, bh_len=40, user_seed=seed)                    
                     # 保存结果
                     output_path = f"./protectedTemplates/{dataset}/{i+1}_{j+1}"
                     np.savez(output_path, 
@@ -74,8 +75,9 @@ def generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="a
                 elif method == "bi_avet":
                     protected_template = bi_avet(fingerprint_vector,seed)
                 elif method == "in_avet":
-                    protected_template = in_avet(fingerprint_vector,seed)
-                
+                    protected_template = in_avet(fingerprint_vector,k=300,g=16,seed=seed)
+                elif method == "bio_hash":
+                    protected_template = biohash(fingerprint_vector, bh_len=40, user_seed=seed)
                 # 保存结果
                 output_path = f"./protectedTemplates/{dataset}/{i+1}_{j+4}"
                 np.savez(output_path, 
@@ -90,4 +92,4 @@ def generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="a
 
 if __name__ == '__main__':
     # generate_protected_templates(data_type="fingerprint",dataset="FVC2002/Db1_a",seed=1,method="in_avet")
-    generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="in_avet")
+    generate_protected_templates(data_type="fingerprint",dataset="FVC2002/Db1_a",seed=1,method="in_avet")

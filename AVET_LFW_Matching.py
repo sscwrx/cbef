@@ -22,6 +22,9 @@ def calculate_template_similarity(template1, template2,measure="cosine"):
         # jaccard similarity in_avet
         # assert isinstance(template1[0],np.int32), f"template element must be np.int32 type, got {type(template1[0])}"
         # similarity = np.sum(np.bitwise_and(template1,template2)) / np.sum(np.bitwise_or(template1,template2))
+        
+        # distance = sp.spatial.distance.jaccard(template1, template2)
+        # similarity = 1 - distance
         match = np.abs(template1 - template2)
         total_zero_num = np.count_nonzero(match == 0)
         similarity = total_zero_num / (template1.__len__() + template2.__len__() - total_zero_num)
@@ -143,30 +146,31 @@ def perform_matching(data_type='face',dataset="LFW",template_path="./protectedTe
 if __name__ == '__main__':
     times = 5
     seed = [1,2,3,4,5]
+    data_type = ["fingerprint","face"]
     datasets = {
         "fingerprint":["FVC2002/Db1_a","FVC2002/Db2_a","FVC2002/Db3_a",
                        "FVC2004/Db1_a","FVC2004/Db2_a","FVC2004/Db3_a"],
         "face":["FEI","LFW", "ColorFeret", "CASIA-WebFace"]
     }
 
-    # datasets = ["FEI"]
-
-    dataset = datasets['face'][0]
-    method = "in_avet"
     measure = "jaccard"
     eer_list = []
     optimal_thr_list = []
-    test_template = np.load(f"./protectedTemplates/{dataset}/1_4.npz")['protected_template']
-    # print(test_template)    
-    for i in range(times):
-        print(f"({i+1}/5) Matching evaluation for {dataset}... ")
-        EER, thr = perform_matching(data_type="fingerprint",
-                                    dataset=dataset,
-                                    template_path=f"./protectedTemplates/{dataset}/",
-                                    verbose=True,
-                                    measure=measure)
-        eer_list.append(EER)
-        optimal_thr_list.append(thr)
+
+    # print(test_template)   
+    for data_type in data_type:
+        for dataset in datasets[data_type]:
+            eer_list.append(EER)
+            optimal_thr_list.append(thr)
+            for i in range(times):
+                print(f"({i+1}/5) Matching evaluation for {dataset}... ")
+                EER, thr = perform_matching(data_type=data_type,
+                                            dataset=dataset,
+                                            template_path=f"./protectedTemplates/{dataset}/",
+                                            verbose=True,
+                                            measure=measure)
+            eer_list.append(EER)
+            optimal_thr_list.append(thr)
     print("#" * 100)
     print(f"\nFinal results for {dataset} (min):")
     print(f"Mean EER: {np.mean(eer_list)}")
