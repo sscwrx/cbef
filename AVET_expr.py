@@ -63,11 +63,12 @@ if __name__ == '__main__':
                     eer_list = []
                     optimal_thr_list = []
                     for i in range(times):
-                        generate_protected_templates(data_type = data_type,
+                        mean_time = generate_protected_templates(data_type = data_type,
                                                         dataset = dataset,
                                                         seed=seed[i],
                                                         method=method
                                                         )
+                        logger.info(f"{dataset} {method} 生成500个受保护模板的平均时间是：{mean_time}")
                         logger.info(f"({i+1}/5) Matching evaluation for {dataset}... method={method} seed={seed[i]},measure={measure}")
                         EER, thr = perform_matching(data_type=data_type,
                                                     dataset=dataset,
@@ -75,6 +76,7 @@ if __name__ == '__main__':
                                                     measure=measure)
                         eer_list.append(EER)
                         optimal_thr_list.append(thr)
+
                     log_experiment_results(logger, eer_list, optimal_thr_list, f"{dataset}")
 
             elif data_type == "face":
@@ -88,6 +90,7 @@ if __name__ == '__main__':
                                                             seed= seed[i],
                                                             method=method
                                                             )
+                            logging.info(f"{dataset} {method} 生成1524个受保护模板的平均时间是：{mean_time}")
                             logger.info(f"({i+1}/5) Matching evaluation for {dataset}... method={method} seed={seed[i]},measure={measure}")
                             EER, thr = perform_matching(data_type=data_type,
                                                     dataset=dataset,

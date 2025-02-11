@@ -9,7 +9,7 @@ from AVET_LFW_Matching import perform_matching
 def generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="avet"):
     # 初始化保护系统（特征维度为512，与原始代码相同）
     assert data_type in ["face", "fingerprint"], "data_type must be 'face' or 'fingerprint'"
-    assert method in ["avet", "bi_avet", "in_avet"], "method must be 'avet' or 'bi_avet' or 'in_avet'"
+    assert method in ["baseline","bio_hash","avet", "bi_avet", "in_avet"], "method must be 'avet' or 'bi_avet' or 'in_avet'"
 
     if data_type == "face":
         # 初始化计时
@@ -39,7 +39,9 @@ def generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="a
                     elif method == "in_avet":
                         protected_template = in_avet(face_vector,k=300,g=16,seed=seed)
                     elif method == "bio_hash":
-                        protected_template = biohash(fingerprint_vector, bh_len=40, user_seed=seed)                    
+                        protected_template = biohash(face_vector, bh_len=40, user_seed=seed)     
+                    elif method == "baseline":
+                        protected_template = face_vector               
                     # 保存结果
                     output_path = f"./protectedTemplates/{dataset}/{i+1}_{j+1}"
                     np.savez(output_path, 
@@ -53,7 +55,7 @@ def generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="a
         end_time = time.time()
         mean_time = (end_time - start_time) / 1524  # 总共127*12=1524个模板
         print('生成1524个受保护模板的平均时间是：', mean_time)
-        
+        return mean_time
     elif data_type == "fingerprint":
 
         # 初始化计时
@@ -78,6 +80,8 @@ def generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="a
                     protected_template = in_avet(fingerprint_vector,k=300,g=16,seed=seed)
                 elif method == "bio_hash":
                     protected_template = biohash(fingerprint_vector, bh_len=40, user_seed=seed)
+                elif method == "baseline":
+                    protected_template = fingerprint_vector  
                 # 保存结果
                 output_path = f"./protectedTemplates/{dataset}/{i+1}_{j+4}"
                 np.savez(output_path, 
@@ -88,8 +92,16 @@ def generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="a
         end_time = time.time()
         mean_time = (end_time - start_time) / 500 
         print('生成500个受保护模板的平均时间是：', mean_time)
-        
+        return mean_time
 
 if __name__ == '__main__':
     # generate_protected_templates(data_type="fingerprint",dataset="FVC2002/Db1_a",seed=1,method="in_avet")
-    generate_protected_templates(data_type="fingerprint",dataset="FVC2002/Db1_a",seed=1,method="in_avet")
+    # generate_protected_templates(data_type="fingerprint",dataset="FVC2002/Db1_a",seed=1,method="in_avet")
+    embd = sp.io.loadmat("./embeddings/FVC2002/Db1_a/1_4.mat")["Ftemplate"]
+    hc_avet = absolute_value_equations_transform(embd,seed=1)
+    hc_bi_avet = bi_avet(embd,seed=1)
+    hc_in_avet = in_avet(embd,k=300,g=16,seed=1)
+    import scipy.stats as stats
+    print(stats.describe(embd))
+    print(stats.describe(hc_avet))
+    print(stats.describe(hc_bi_avet))
