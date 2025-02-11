@@ -1,0 +1,7 @@
+__pycache__ 
+embeddings
+protectedTemplates
+*.log
+*.ipynb
+*.mat
+*.npz
