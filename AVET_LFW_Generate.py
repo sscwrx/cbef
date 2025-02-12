@@ -60,6 +60,8 @@ def generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="a
 
         # 初始化计时
         start_time = time.time()
+
+        
         # 生成受保护的模板
         for i in tqdm(range(0,100)):
             for j in range(0,5):
@@ -69,8 +71,12 @@ def generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="a
                     
                 mat_file = sp.io.loadmat(path)
                 fingerprint_vector = mat_file['Ftemplate']  # 与原始代码保持一致
+
+
+                # 归一化
                 fingerprint_vector = np.squeeze(fingerprint_vector)
-                
+                # fingerprint_vector = fingerprint_vector / np.linalg.norm(fingerprint_vector)
+
                 # 生成受保护模板
                 if method == "avet":
                     protected_template,_,_,_ = absolute_value_equations_transform(fingerprint_vector,seed)
@@ -95,13 +101,4 @@ def generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="a
         return mean_time
 
 if __name__ == '__main__':
-    # generate_protected_templates(data_type="fingerprint",dataset="FVC2002/Db1_a",seed=1,method="in_avet")
-    # generate_protected_templates(data_type="fingerprint",dataset="FVC2002/Db1_a",seed=1,method="in_avet")
-    embd = sp.io.loadmat("./embeddings/FVC2002/Db1_a/1_4.mat")["Ftemplate"]
-    hc_avet = absolute_value_equations_transform(embd,seed=1)
-    hc_bi_avet = bi_avet(embd,seed=1)
-    hc_in_avet = in_avet(embd,k=300,g=16,seed=1)
-    import scipy.stats as stats
-    print(stats.describe(embd))
-    print(stats.describe(hc_avet))
-    print(stats.describe(hc_bi_avet))
+    generate_protected_templates(data_type="fingerprint",dataset="FVC2002/Db1_a",seed=1,method="baseline")

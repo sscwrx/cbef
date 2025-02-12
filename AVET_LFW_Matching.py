@@ -4,20 +4,21 @@ import time
 import CalculateVerificationRate
 from AVET_imp import absolute_value_equations_transform
 import scipy as sp
+from scipy.spatial import distance
 def calculate_template_similarity(template1, template2,measure="cosine"):
     """计算两个受保护模板之间的相似度"""
     if len(template1) != len(template2):
         raise ValueError(f"模板长度不匹配, {len(template1)} != {len(template2)}")
 
     if measure == "cosine":
-        # cosine similarity 
+        # cosine similarity
         similarity = np.dot(template1, template2) / (np.linalg.norm(template1) * np.linalg.norm(template2))
     elif measure == "euclidean":
         # eculidean
         similarity =  - sp.spatial.distance.euclidean(template1, template2)
     elif measure == "hamming":
         # hamming similarity 
-        similarity = np.sum(template1 == template2) / len(template1) 
+        similarity = 1 - sp.spatial.distance.hamming(template1, template2)
     elif measure == "jaccard":
         # jaccard similarity in_avet
         # assert isinstance(template1[0],np.int32), f"template element must be np.int32 type, got {type(template1[0])}"
@@ -28,7 +29,7 @@ def calculate_template_similarity(template1, template2,measure="cosine"):
         match = np.abs(template1 - template2)
         total_zero_num = np.count_nonzero(match == 0)
         similarity = total_zero_num / (template1.__len__() + template2.__len__() - total_zero_num)
-        
+
     return similarity
 
 def perform_matching(data_type='face',dataset="LFW",template_path="./protectedTemplates/LFW/",verbose=False,measure="cosine"):
@@ -42,12 +43,10 @@ def perform_matching(data_type='face',dataset="LFW",template_path="./protectedTe
         genuine_similarity_list = []
         impostor_similarity_list = []
         
-
-        
         # 执行真匹配（同一用户的不同样本）
         start_time1 = time.time()
         for i in range(127):
-            for comb in genuine_combinations:
+            for comb in genuine_combinations: 
                 # 加载第一个模板
                 data1 = np.load(f"{template_path}/{i+1}_{comb[0]}.npz")
                 template1 = data1['protected_template']
@@ -93,9 +92,9 @@ def perform_matching(data_type='face',dataset="LFW",template_path="./protectedTe
         
         return EER, thr
     elif data_type == "fingerprint":
-
-        genuine_combinations = itertools.combinations(list(range(4, 9)), 2)#真匹配，每个用户的类内匹配，C52 * 100= 1000
-        impostor_combinations = itertools.combinations(list(range(1, 101)), 2)  # 假匹配，每个用户的第一个i_4.npy模板与其它所有用户的第一个模板j_4.npy做假匹配，C100 2 = 4950
+        # 重要bug!!!，原来是genuine_combinations，迭代器只能迭代一次，所以只有一次循环，所以这里一直只有10个真匹配相似度 
+        genuine_combinations = list(itertools.combinations(list(range(4, 9)), 2))#真匹配，每个用户的类内匹配，C52 * 100= 1000
+        impostor_combinations = list(itertools.combinations(list(range(1, 101)), 2))  # 假匹配，每个用户的第一个i_4.npy模板与其它所有用户的第一个模板j_4.npy做假匹配，C100 2 = 4950
         genuine_similarity_list = []
         impostor_similarity_list = []
 
@@ -142,28 +141,32 @@ def perform_matching(data_type='face',dataset="LFW",template_path="./protectedTe
             0.001,
             verbose=verbose
         )
+        print(f"dataset {dataset},EER: {EER}, Optimal Threshold: {thr}") 
         return EER, thr
-if __name__ == '__main__':
-    times = 5
-    seed = [1,2,3,4,5]
-    data_type = ["fingerprint","face"]
-    datasets = {
-        "fingerprint":["FVC2002/Db1_a","FVC2002/Db2_a","FVC2002/Db3_a",
-                       "FVC2004/Db1_a","FVC2004/Db2_a","FVC2004/Db3_a"],
-        "face":["FEI","LFW", "ColorFeret", "CASIA-WebFace"]
-    }
 
-    measure = "jaccard"
+    
+if __name__ == '__main__':
+    times = 1
+    seed = [1,2,3,4,5]
+    data_types = ["fingerprint","face"]
+    # datasets = {
+        # "fingerprint":["FVC2002/Db1_a","FVC2002/Db2_a","FVC2002/Db3_a",
+                    #    "FVC2004/Db1_a","FVC2004/Db2_a","FVC2004/Db3_a"],
+        # "face":["FEI","LFW", "ColorFeret", "CASIA-WebFace"]
+    # }
+    datasets = {
+        "fingerprint": ["FVC2002/Db1_a"],
+        "face":[]
+    }
+    measure = "euclidean"
     eer_list = []
     optimal_thr_list = []
 
     # print(test_template)   
-    for data_type in data_type:
+    for data_type in data_types:
         for dataset in datasets[data_type]:
-            eer_list.append(EER)
-            optimal_thr_list.append(thr)
             for i in range(times):
-                print(f"({i+1}/5) Matching evaluation for {dataset}... ")
+                print(f"({i+1}/{times}) Matching evaluation for {dataset}... ")
                 EER, thr = perform_matching(data_type=data_type,
                                             dataset=dataset,
                                             template_path=f"./protectedTemplates/{dataset}/",
