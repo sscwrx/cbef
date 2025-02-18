@@ -15,7 +15,7 @@ def absolute_value_equations_transform(x: np.ndarray,seed:int=1) -> np.ndarray:
     rng = np.random.default_rng(seed)
     R = rng.normal(loc=0,scale=(1/ np.sqrt(n)),size=(n,n))
     A = rng.normal(loc=0,scale=(1/ np.sqrt(n)),size=(n,n))
-    B = rng.normal(loc=0,scale=(1/ np.sqrt(n)),size=(n,n))  
+    B = rng.normal(loc=0,scale=(1/ np.sqrt(n)),size=(n,n))
     y =  A @ u + B @  np.abs(R @ v)
 
     return y , R , A , B

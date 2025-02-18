@@ -2,11 +2,12 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List
 import numpy as np 
+from pathlib import Path
 from config.base_config import BaseConfig
 
 
 class MethodConfig(BaseConfig):
-    pass 
+    output_dir: str = Path("./output") 
 class BaseMethod(ABC):
         
     config: MethodConfig
