@@ -1,5 +1,6 @@
 import numpy as np 
 
+
 def absolute_value_equations_transform(x: np.ndarray,seed:int=1) -> np.ndarray:
     assert len(x.shape) == 1, "Input must be a 1D array,please use np.squeeze() to convert it." 
 

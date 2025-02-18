@@ -1,8 +1,8 @@
 import itertools
 import numpy as np
 import time
-import CalculateVerificationRate
-from AVET_imp import absolute_value_equations_transform
+import CalculateVerificationRate as CalculateVerificationRate
+from method.AVET_imp import absolute_value_equations_transform
 import scipy as sp
 from scipy.spatial import distance
 def calculate_template_similarity(template1, template2,measure="cosine"):
