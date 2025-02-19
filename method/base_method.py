@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod 
 from dataclasses import dataclass
-from typing import List
+from typing import List, Literal
 import numpy as np 
 from pathlib import Path
 from config.base_config import BaseConfig
 
 
 class MethodConfig(BaseConfig):
-    output_dir: Path = Path("./output") 
+    method_name:Literal["biohash","avet","bi_avet","in_avet","c_iom"]
 class BaseMethod(ABC):
         
     config: MethodConfig

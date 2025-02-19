@@ -39,8 +39,9 @@ class EERMetrics:
     
     def __init__(self, config: EERMetricsConfig, data_config: BaseDatasetConfig):
         self.config:EERMetricsConfig = config
+        assert self.config.measure is not None, "Measure must be provided." 
         self.data_config:BaseDatasetConfig = data_config
-
+        
     def calculate_template_similarity(self, template1, template2)->float:
         """计算两个受保护模板之间的相似度"""
         if len(template1) != len(template2):
