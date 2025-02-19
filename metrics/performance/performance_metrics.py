@@ -1,44 +1,47 @@
+from ast import Dict, List
 import itertools
 import numpy as np
 import time
+
+from sympy import O
 import metrics.performance.CalculateVerificationRate as CalculateVerificationRate
-from method.AVET_imp import absolute_value_equations_transform
+from method.AVET import absolute_value_equations_transform
 import scipy as sp
 from scipy.spatial import distance
 from config.base_config import BaseConfig
 from data.base_dataset import BaseDataset
 from data.base_dataset import BaseDatasetConfig
 from pathlib import Path 
-from typing import Literal, Type
+from typing import Literal, Type,List,Dict,Tuple,Union ,Optional
 import math 
 from dataclasses import dataclass,field
 @dataclass
-class MetricsConfig(BaseConfig):
+class EERMetricsConfig(BaseConfig):
     """Configuration class for metrics."""
 
-    _target: Type
+    _target: Type = field(default_factory= lambda: EERMetrics) 
     """目标类型"""
 
-    measure: Literal["cosine", "euclidean", "hamming", "jaccard"]
+    measure: Optional[Literal["cosine", "euclidean", "hamming", "jaccard"]] = None 
     """Measure to use for calculating similarity."""
 
-    verbose: bool
+    verbose: bool = False 
     """Whether to print verbose output.""" 
     
-    protected_template_dir: Path
+    protected_template_dir: Path = Path("protected_templates")
     """Path to protected templates.""" 
 
 class EERMetrics:
     """ Class for calculating EER and threshold."""
 
-    config: MetricsConfig
+    config: EERMetricsConfig
     data_config: BaseDatasetConfig
     
-    def __init__(self, config: MetricsConfig, data_config: BaseDatasetConfig):
-        self.config:MetricsConfig = config
+    def __init__(self, config: EERMetricsConfig, data_config: BaseDatasetConfig):
+        self.config:EERMetricsConfig = config
         self.data_config:BaseDatasetConfig = data_config
 
-    def calculate_template_similarity(self, template1, template2):
+    def calculate_template_similarity(self, template1, template2)->float:
         """计算两个受保护模板之间的相似度"""
         if len(template1) != len(template2):
             raise ValueError(f"模板长度不匹配, {len(template1)} != {len(template2)}")
@@ -60,7 +63,7 @@ class EERMetrics:
 
         return similarity
 
-    def perform_matching(self):
+    def perform_matching(self)->Tuple[float, float,List[float],List[float]]:
         """执行模板匹配过程"""
         # 生成真匹配和假匹配的组合
         genuine_combinations = list(itertools.combinations(range(1, self.data_config.n_subjects), 2))
@@ -115,7 +118,7 @@ class EERMetrics:
             verbose=self.config.verbose
         )
         
-        return EER, thr
+        return EER, thr, genuine_similarity_list, impostor_similarity_list
 
     @property
     def n_genuines_combinations(self):
