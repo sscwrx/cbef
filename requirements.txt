@@ -1,0 +1,7 @@
+tyro==0.9.14
+numpy
+pandas
+scipy
+scikit-learn
+matplotlib
+seaborn

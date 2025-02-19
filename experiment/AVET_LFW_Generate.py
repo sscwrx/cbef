@@ -5,7 +5,7 @@ import os
 from tqdm import tqdm
 from method.AVET_imp import absolute_value_equations_transform,bi_avet, in_avet,biohash
 from pathlib import Path
-from AVET_LFW_Matching import perform_matching
+from metrics.performance.performance_metrics import perform_matching
 def generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="avet"):
     # 初始化保护系统（特征维度为512，与原始代码相同）
     assert data_type in ["face", "fingerprint"], "data_type must be 'face' or 'fingerprint'"

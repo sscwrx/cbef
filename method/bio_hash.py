@@ -1,20 +1,21 @@
 from base_method import BaseMethod, MethodConfig
-
-
-
+from dataclasses import dataclass, field
+import numpy as np 
+@dataclass
 class BioHashConfig(MethodConfig):
     """Configuration class for BioHash method."""
 
     """The desired length of the resulting BioHashCode."""
-    bh_len: int = 40
+    _target = field(default_factory= lambda: BioHash)
+    bh_len: int = 40 
 
 class BioHash(BaseMethod):
     config: BioHashConfig
 
-    def __init__(self, config, **kwargs):
-        super().__init__(config, **kwargs)
+    def __init__(self, config):
+        self.config = config
 
-    def process_feature( feature_vector, seed=1):
+    def process_feature(self,feature_vector, seed=1):
         """ Creates a BioHash by projecting the input biometric feature vector onto a set of randomly generated basis vectors and then binarising the resulting vector
 
         **Parameters:**
@@ -31,10 +32,10 @@ class BioHash(BaseMethod):
 
         """
 
-        np.random.seed(user_seed) # re-seed the random number generator according to the user's specific seed
-        rand_mat = np.random.rand(len(feat_vec), bh_len) # generate matrix of random values from uniform distribution over [0, 1] 
+        np.random.seed(seed) # re-seed the random number generator according to the user's specific seed
+        rand_mat = np.random.rand(len(feature_vector), self.config.bh_len) # generate matrix of random values from uniform distribution over [0, 1] 
         orth_mat, _ = np.linalg.qr(rand_mat, mode='reduced') # orthonormalise columns of random matrix, mode='reduced' returns orth_mat with size len(feat_vec) x bh_len    
-        biohash = np.dot(feat_vec, orth_mat)
+        biohash = np.dot(feature_vector, orth_mat)
         thresh = np.mean(biohash) # threshold by which to binarise vector of dot products to generate final BioHash
-        biohash = np.where(biohash > 0, 1, 0)
+        biohash = np.where(biohash > thresh, 1, 0)
         return biohash
