@@ -7,7 +7,7 @@ from config.base_config import BaseConfig
 
 
 class MethodConfig(BaseConfig):
-    output_dir: str = Path("./output") 
+    output_dir: Path = Path("./output") 
 class BaseMethod(ABC):
         
     config: MethodConfig

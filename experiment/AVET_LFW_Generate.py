@@ -3,7 +3,7 @@ import scipy as sp
 import time
 import os
 from tqdm import tqdm
-from method.AVET_imp import absolute_value_equations_transform,bi_avet, in_avet,biohash
+from method.AVET import absolute_value_equations_transform,bi_avet, in_avet,biohash
 from pathlib import Path
 from metrics.performance.performance_metrics import perform_matching
 def generate_protected_templates(data_type="face",dataset="LFW",seed=1,method="avet"):

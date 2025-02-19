@@ -1,4 +1,4 @@
-from metrics.performance.performance_metrics import perform_matching
+
 from AVET_LFW_Generate import generate_protected_templates
 from pathlib import Path 
 import numpy as np

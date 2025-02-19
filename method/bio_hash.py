@@ -1,12 +1,15 @@
-from base_method import BaseMethod, MethodConfig
+from numpy._typing._array_like import NDArray
+from method.base_method import BaseMethod, MethodConfig
 from dataclasses import dataclass, field
+from typing import Type
 import numpy as np 
+from numpy.typing import NDArray
 @dataclass
 class BioHashConfig(MethodConfig):
     """Configuration class for BioHash method."""
 
     """The desired length of the resulting BioHashCode."""
-    _target = field(default_factory= lambda: BioHash)
+    _target: Type = field(default_factory= lambda: BioHash)
     bh_len: int = 40 
 
 class BioHash(BaseMethod):
@@ -15,7 +18,7 @@ class BioHash(BaseMethod):
     def __init__(self, config):
         self.config = config
 
-    def process_feature(self,feature_vector, seed=1):
+    def process_feature(self,feature_vector, seed=1) -> NDArray[np.float64]:
         """ Creates a BioHash by projecting the input biometric feature vector onto a set of randomly generated basis vectors and then binarising the resulting vector
 
         **Parameters:**
