@@ -6,11 +6,6 @@ from config.base_config import BaseConfig
 from pathlib import Path 
 from typing import Type,Literal, Optional
 from dataclasses import field, dataclass
-class BaseDataset: 
-    config: BaseConfig
-
-    def __init__(self, config: BaseConfig):
-        self.config = config
 
 @dataclass
 class BaseDatasetConfig(BaseConfig): 
@@ -27,3 +22,8 @@ class BaseDatasetConfig(BaseConfig):
     
 
 
+class BaseDataset: 
+    config: BaseConfig
+
+    def __init__(self, config: BaseConfig):
+        self.config = config
