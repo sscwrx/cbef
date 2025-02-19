@@ -171,7 +171,7 @@ def test_n_genuines_combinations(output_path, template_path, data_path):
         data_dir=data_path
     )
     metrics = EERMetrics(config=config, data_config=data_config)
-    
+
     # 对于每个主体(n_subjects)，有C(samples_per_subject,2)个组合
     expected = data_config.n_subjects * math.comb(data_config.samples_per_subject, 2)
     assert metrics.n_genuines_combinations == expected

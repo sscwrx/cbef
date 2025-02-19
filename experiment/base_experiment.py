@@ -8,7 +8,7 @@ from method.base_method import BaseMethod,MethodConfig
 @dataclass
 class ExperimentConfig(BaseConfig):
     """Configuration class for experiments."""
-    output_dir: str = Path("./output")
+    output_dir: Path = Path("./output")
     timestamp:str = datetime.now().strftime("%Y.%m.%d_%H:%M:%S")
     dataset:BaseDatasetConfig = field(default_factory=BaseDatasetConfig)
     method:MethodConfig = field(default_factory=MethodConfig)

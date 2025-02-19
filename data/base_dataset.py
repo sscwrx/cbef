@@ -50,7 +50,7 @@ class FingerprintDatasetConfig(BaseDatasetConfig):
 
 
 class BaseDataset: 
-    config: BaseDatasetConfig
+    config: BaseConfig
 
     def __init__(self, config: BaseConfig):
         self.config = config

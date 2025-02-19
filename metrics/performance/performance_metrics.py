@@ -29,19 +29,14 @@ class MetricsConfig(BaseConfig):
     """Path to protected templates.""" 
 
 class EERMetrics:
-    """
-        Initialize EER metrics
-        
-        Args:
-            config (MetricsConfig): Metrics configuration
-            data_config (BaseDatasetConfig): Dataset configuration
-    """
+    """ Class for calculating EER and threshold."""
+
     config: MetricsConfig
     data_config: BaseDatasetConfig
     
     def __init__(self, config: MetricsConfig, data_config: BaseDatasetConfig):
-        self.config = config
-        self.data_config = data_config
+        self.config:MetricsConfig = config
+        self.data_config:BaseDatasetConfig = data_config
 
     def calculate_template_similarity(self, template1, template2):
         """计算两个受保护模板之间的相似度"""

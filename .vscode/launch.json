@@ -6,5 +6,6 @@
                 "PYTHONPATH": "${workspaceFolder}"
             }
         }
+
     ]
 }
