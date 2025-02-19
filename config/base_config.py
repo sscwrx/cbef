@@ -8,6 +8,7 @@ class BaseConfig:
 
     _target:Type 
 
+    # for intialized the target  manually
     def setup(self,**kwargs)->Any:
         return self._target(self,**kwargs) 
     
