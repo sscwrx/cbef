@@ -1,16 +1,14 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod 
 from pathlib import Path 
-from typing import Tuple,Type
+from typing import Tuple, Type, Any
 @dataclass
 class BaseConfig: 
     """Base configuration class."""
 
     _target:Type 
-    """where the output files will be saved"""
-    output_dir:Path
-    
-    def setup(self,**kwargs):
+
+    def setup(self,**kwargs)->Any:
         return self._target(self,**kwargs) 
     
     def __str__(self):
@@ -25,7 +23,3 @@ class BaseConfig:
                 val = flattened_val + "]"
             lines += f"{key}: {str(val)}".split("\n")
         return "\n    ".join(lines)
-
-    def __post_init__(self):
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-    
