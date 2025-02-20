@@ -1,12 +1,16 @@
+from abc import abstractmethod
 from dataclasses import dataclass
 
 from click import Option
 from pyparsing import Opt
 from config.base_config import BaseConfig 
 from pathlib import Path 
-from typing import Type,Literal, Optional
+from typing import Tuple, Type,Literal, Optional
 from dataclasses import field, dataclass
-
+from abc import abstractmethod
+import numpy as np 
+from numpy.typing import NDArray
+from typing import Dict ,List
 @dataclass
 class BaseDatasetConfig(BaseConfig): 
     """Base configuration class."""
@@ -27,3 +31,7 @@ class BaseDataset:
 
     def __init__(self, config: BaseConfig):
         self.config = config
+
+    @abstractmethod
+    def load_data(self)->Dict[Tuple[int,int],NDArray ]:
+        pass
