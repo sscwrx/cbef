@@ -1,5 +1,5 @@
 import numpy as np
-from sliding_window import SlidingWindowMechanism
+from method.modules.sliding_window import SlidingWindowMechanism
 from mpl_toolkits.mplot3d import Axes3D
 from pathlib import Path 
 from tqdm import tqdm

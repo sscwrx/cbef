@@ -1,18 +1,24 @@
+from sympy import Union
 from config.base_config import BaseConfig
 from pathlib import Path 
 from datetime import datetime
 from dataclasses import dataclass,field
-from data.base_dataset import BaseDatasetConfig
+from data.face_dataset import FaceDatasetConfig
+from data.fingerprint_dataset import FingerprintDatasetConfig
 from method.base_method import MethodConfig
 from metrics.performance.performance_metrics import EERMetricsConfig
-from typing import Tuple
+from typing import Tuple,Union
 from time import time 
+from tqdm import tqdm 
+import scipy as sp 
+import numpy as np
 @dataclass
 class ExperimentConfig:
     """Configuration class for experiments."""
 
+    expriment_name: str = "Experiment"
     timestamp:str = datetime.now().strftime("%Y.%m.%d_%H:%M:%S")
-    output_dir: Path = Path("./output")
+    output_dir: Path = Path("./output") /  timestamp   
 
     def __str__(self):
         """just for pretty print() """
@@ -33,7 +39,7 @@ class ExperimentConfig:
 class Experiment:
     """Base class for all experiments."""
     config: ExperimentConfig
-    dataset:BaseDatasetConfig
+    dataset:Union[FaceDatasetConfig,FingerprintDatasetConfig]
     method: MethodConfig
     metrics:EERMetricsConfig
 
@@ -54,11 +60,11 @@ class Experiment:
         start_time = time.time()
         
         # 生成受保护的模板
-        for i in tqdm(range(0,100)):
-            for j in range(0,5):
+        for i in tqdm(range(0,self.dataset.n_subjects)):
+            for j in range(0,self.dataset.samples_per_subject):
                 # 加载特征向量
-                path = f"./embeddings/{dataset}/{i+1}_{j+4}.mat" # dataset value is like "FVC2002/Db1_a" 
-                assert os.path.exists(path), f"File not found: {path}"
+                path = f"{self.dataset.embeddings_dir}/{self.dataset.dataset_name}/{i+1}_{j+4}.mat" # dataset value is like "FVC2002/Db1_a" 
+                assert Path(path).exists(), f"{path} does not exist."
                     
                 mat_file = sp.io.loadmat(path)
                 fingerprint_vector = mat_file['Ftemplate']  # 与原始代码保持一致
@@ -68,22 +74,22 @@ class Experiment:
                 fingerprint_vector = np.squeeze(fingerprint_vector)
                 # fingerprint_vector = fingerprint_vector / np.linalg.norm(fingerprint_vector)
 
-                # 生成受保护模板
-                if method == "avet":
-                    protected_template,_,_,_ = absolute_value_equations_transform(fingerprint_vector,seed)
-                elif method == "bi_avet":
-                    protected_template = bi_avet(fingerprint_vector,seed)
-                elif method == "in_avet":
-                    protected_template = in_avet(fingerprint_vector,k=300,g=16,seed=seed)
-                elif method == "bio_hash":
-                    protected_template = biohash(fingerprint_vector, bh_len=40, user_seed=seed)
-                elif method == "baseline":
-                    protected_template = fingerprint_vector  
-                # 保存结果
-                output_path = f"./protectedTemplates/{dataset}/{i+1}_{j+4}"
-                np.savez(output_path, 
-                        protected_template=protected_template,
-                        seed=seed)
+                # # 生成受保护模板
+                # if method == "avet":
+                #     protected_template,_,_,_ = absolute_value_equations_transform(fingerprint_vector,seed)
+                # elif method == "bi_avet":
+                #     protected_template = bi_avet(fingerprint_vector,seed)
+                # elif method == "in_avet":
+                #     protected_template = in_avet(fingerprint_vector,k=300,g=16,seed=seed)
+                # elif method == "bio_hash":
+                #     protected_template = biohash(fingerprint_vector, bh_len=40, user_seed=seed)
+                # elif method == "baseline":
+                #     protected_template = fingerprint_vector  
+                # # 保存结果
+                # output_path = f"./protectedTemplates/{dataset}/{i+1}_{j+4}"
+                # np.savez(output_path, 
+                #         protected_template=protected_template,
+                #         seed=seed)
 
         # 计算平均时间
         end_time = time.time()
