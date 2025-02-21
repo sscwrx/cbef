@@ -4,6 +4,8 @@ import numpy as np
 import time
 
 from sympy import O
+from data.face_dataset import FaceDatasetConfig
+from data.fingerprint_dataset import FingerprintDatasetConfig
 import metrics.performance.CalculateVerificationRate as CalculateVerificationRate
 
 import scipy as sp
@@ -69,9 +71,13 @@ class EERMetrics:
     def perform_matching(self)->Tuple[float, float,List[float],List[float]]:
         """执行模板匹配过程"""
         # 生成真匹配和假匹配的组合
-        genuine_combinations = list(itertools.combinations(range(1, self.data_config.samples_per_subject+1), 2))
-        impostor_combinations = list(itertools.combinations(range(1, self.data_config.n_subjects+1), 2))
-
+        # 指纹数据选择第四个样本
+        if isinstance(self.data_config,FingerprintDatasetConfig):
+            genuine_combinations = list(itertools.combinations(range(4, 4+self.data_config.samples_per_subject), 2))
+            impostor_combinations = list(itertools.combinations(range(1, self.data_config.n_subjects+1), 2))
+        else:
+            genuine_combinations = list(itertools.combinations(range(1, self.data_config.samples_per_subject+1), 2))
+            impostor_combinations = list(itertools.combinations(range(1, self.data_config.n_subjects+1), 2))
         genuine_similarity_list = []
         impostor_similarity_list = []
         
@@ -84,6 +90,7 @@ class EERMetrics:
                     template1:NDArray = np.load(f"{self.config.protected_template_dir}/{i+1}_{comb[0]}.npy")
                     # 加载第二个模板
                     template2:NDArray = np.load(f"{self.config.protected_template_dir}/{i+1}_{comb[1]}.npy")
+                    
                     template1 = np.squeeze(template1)
                     template2 = np.squeeze(template2)
                     # 计算相似度
@@ -100,11 +107,14 @@ class EERMetrics:
         start_time2 = time.time()
         for comb in tqdm(impostor_combinations,desc="Imposter Matching"):
             # 加载第一个模板
-            template1:NDArray = np.load(f"{self.config.protected_template_dir}/{comb[0]}_1.npy")
-            
-            # 加载第二个模板
-            template2:NDArray = np.load(f"{self.config.protected_template_dir}/{comb[1]}_1.npy")
-            
+            try:
+                template1:NDArray = np.load(f"{self.config.protected_template_dir}/{comb[0]}_1.npy")
+                # 加载第二个模板
+                template2:NDArray = np.load(f"{self.config.protected_template_dir}/{comb[1]}_1.npy")
+            except Exception as e:
+                
+                template1:NDArray = np.load(f"{self.config.protected_template_dir}/{comb[0]}_4.npy")
+                template2:NDArray = np.load(f"{self.config.protected_template_dir}/{comb[1]}_4.npy")
             # 计算相似度
             similarity = self.calculate_template_similarity(template1, template2)
             impostor_similarity_list.append(similarity)
