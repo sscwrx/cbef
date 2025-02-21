@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Literal, Type,List,Dict,Tuple,Union ,Optional
 import math 
 from dataclasses import dataclass,field
+from numpy.typing import NDArray
 @dataclass
 class EERMetricsConfig(BaseConfig):
     """Configuration class for metrics."""
@@ -28,8 +29,8 @@ class EERMetricsConfig(BaseConfig):
     verbose: bool = False 
     """Whether to print verbose output.""" 
     
-    protected_template_dir: Path = Path("protected_templates")
-    """Path to protected templates.""" 
+    protected_template_dir: Path = Path("./")
+    """Path to protected templates, set it in ExperimentConfig""" 
 
 class EERMetrics:
     """ Class for calculating EER and threshold."""
@@ -67,8 +68,8 @@ class EERMetrics:
     def perform_matching(self)->Tuple[float, float,List[float],List[float]]:
         """执行模板匹配过程"""
         # 生成真匹配和假匹配的组合
-        genuine_combinations = list(itertools.combinations(range(1, self.data_config.n_subjects), 2))
-        impostor_combinations = list(itertools.combinations(range(1, self.data_config.samples_per_subject), 2))
+        genuine_combinations = list(itertools.combinations(range(1, self.data_config.samples_per_subject), 2))
+        impostor_combinations = list(itertools.combinations(range(1, self.data_config.n_subjects), 2))
         
         genuine_similarity_list = []
         impostor_similarity_list = []
@@ -78,12 +79,9 @@ class EERMetrics:
         for i in range(self.data_config.n_subjects):
             for comb in genuine_combinations: 
                 # 加载第一个模板
-                data1 = np.load(f"{self.config.protected_template_dir}/{i+1}_{comb[0]}.npz")
-                template1 = data1['protected_template']
-                
+                template1:NDArray = np.load(f"{self.config.protected_template_dir}/{i+1}_{comb[0]}.npy")
                 # 加载第二个模板
-                data2 = np.load(f"{self.config.protected_template_dir}/{i+1}_{comb[1]}.npz")
-                template2 = data2['protected_template']
+                template2:NDArray = np.load(f"{self.config.protected_template_dir}/{i+1}_{comb[1]}.npy")
                 # 计算相似度
                 similarity = self.calculate_template_similarity(template1, template2)
                 genuine_similarity_list.append(similarity)
@@ -96,12 +94,10 @@ class EERMetrics:
         start_time2 = time.time()
         for comb in impostor_combinations:
             # 加载第一个模板
-            data1 = np.load(f"{self.config.protected_template_dir}/{comb[0]}_1.npz")
-            template1 = data1['protected_template']
+            template1:NDArray = np.load(f"{self.config.protected_template_dir}/{comb[0]}_1.npy")
             
             # 加载第二个模板
-            data2 = np.load(f"{self.config.protected_template_dir}/{comb[1]}_1.npz")
-            template2 = data2['protected_template']
+            template2:NDArray = np.load(f"{self.config.protected_template_dir}/{comb[1]}_1.npy")
             
             # 计算相似度
             similarity = self.calculate_template_similarity(template1, template2)
@@ -127,4 +123,4 @@ class EERMetrics:
     
     @property
     def n_impostor_combinations(self):
-        return math.comb(self.data_config.samples_per_subject, 2)
+        return math.comb(self.data_config.n_subjects, 2)
