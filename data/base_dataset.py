@@ -15,23 +15,25 @@ from typing import Dict ,List
 class BaseDatasetConfig(BaseConfig): 
     """Base configuration class."""
     _target: Type = field (default_factory=lambda: BaseDataset)
+    dataset_name :Optional[str] = None
     n_subjects: int = 0
     samples_per_subject: int = 0
     embeddings_dir: Path = Path("./embeddings")
     """数据目录"""
     
-    @property
-    def total_samples(self):
-        return self.n_subjects * self.samples_per_subject
-    
 
 
 class BaseDataset: 
-    config: BaseConfig
+    config: BaseDatasetConfig
 
-    def __init__(self, config: BaseConfig):
+    def __init__(self, config: BaseDatasetConfig):
         self.config = config
 
     @abstractmethod
     def load_data(self)->Dict[Tuple[int,int],NDArray ]:
         pass
+
+    @property
+    def total_samples(self):
+        return self.config.n_subjects * self.config.samples_per_subject
+    

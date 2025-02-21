@@ -7,7 +7,7 @@ from data.base_dataset import BaseDataset, BaseDatasetConfig
 class FingerprintDatasetConfig(BaseDatasetConfig):
     """Configuration class for fingerprint datasets."""
     _target: Type = field(default_factory=lambda: FingerprintDataset)
-    dataset_name: Optional[Literal["FVC2002/Db1_a","FVC2002/Db2_a","FVC2002/Db3_a" 
+    dataset_name: Optional[Literal["FVC2002/Db1_a","FVC2002/Db2_a","FVC2002/Db3_a",
                                    "FVC2004/Db1_a","FVC2004/Db2_a","FVC2004/Db3_a"]] = None
     n_subjects: int = 100
     samples_per_subject: int = 5
