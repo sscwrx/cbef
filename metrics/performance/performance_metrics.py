@@ -5,7 +5,7 @@ import time
 
 from sympy import O
 import metrics.performance.CalculateVerificationRate as CalculateVerificationRate
-from method.AVET import absolute_value_equations_transform
+
 import scipy as sp
 from scipy.spatial import distance
 from config.base_config import BaseConfig
@@ -16,6 +16,7 @@ from typing import Literal, Type,List,Dict,Tuple,Union ,Optional
 import math 
 from dataclasses import dataclass,field
 from numpy.typing import NDArray
+from tqdm import tqdm
 @dataclass
 class EERMetricsConfig(BaseConfig):
     """Configuration class for metrics."""
@@ -76,7 +77,7 @@ class EERMetrics:
         
         # 执行真匹配（同一用户的不同样本）
         start_time1 = time.time()
-        for i in range(self.data_config.n_subjects):
+        for i in tqdm(range(self.data_config.n_subjects),desc="Genuine Mathcing"):
             for comb in genuine_combinations: 
                 # 加载第一个模板
                 template1:NDArray = np.load(f"{self.config.protected_template_dir}/{i+1}_{comb[0]}.npy")
@@ -92,7 +93,7 @@ class EERMetrics:
         
         # 执行假匹配（不同用户之间的匹配）
         start_time2 = time.time()
-        for comb in impostor_combinations:
+        for comb in tqdm(impostor_combinations,desc="Imposter Matching"):
             # 加载第一个模板
             template1:NDArray = np.load(f"{self.config.protected_template_dir}/{comb[0]}_1.npy")
             

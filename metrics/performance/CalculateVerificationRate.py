@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.typing import NDArray 
 def caculateVerificationRate(thr, client, impostor):
     #计算错误接受率FAR:False Accept Rate
     FA  = 0
