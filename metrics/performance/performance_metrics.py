@@ -69,28 +69,33 @@ class EERMetrics:
     def perform_matching(self)->Tuple[float, float,List[float],List[float]]:
         """执行模板匹配过程"""
         # 生成真匹配和假匹配的组合
-        genuine_combinations = list(itertools.combinations(range(1, self.data_config.samples_per_subject), 2))
-        impostor_combinations = list(itertools.combinations(range(1, self.data_config.n_subjects), 2))
-        
+        genuine_combinations = list(itertools.combinations(range(1, self.data_config.samples_per_subject+1), 2))
+        impostor_combinations = list(itertools.combinations(range(1, self.data_config.n_subjects+1), 2))
+
         genuine_similarity_list = []
         impostor_similarity_list = []
         
         # 执行真匹配（同一用户的不同样本）
         start_time1 = time.time()
-        for i in tqdm(range(self.data_config.n_subjects),desc="Genuine Mathcing"):
-            for comb in genuine_combinations: 
-                # 加载第一个模板
-                template1:NDArray = np.load(f"{self.config.protected_template_dir}/{i+1}_{comb[0]}.npy")
-                # 加载第二个模板
-                template2:NDArray = np.load(f"{self.config.protected_template_dir}/{i+1}_{comb[1]}.npy")
-                # 计算相似度
-                similarity = self.calculate_template_similarity(template1, template2)
-                genuine_similarity_list.append(similarity)
-                
+        with tqdm(total=self.n_genuines_combinations,desc="Genuine Matching") as pbar:
+            for i in range(self.data_config.n_subjects):
+                for comb in genuine_combinations: 
+                    # 加载第一个模板
+                    template1:NDArray = np.load(f"{self.config.protected_template_dir}/{i+1}_{comb[0]}.npy")
+                    # 加载第二个模板
+                    template2:NDArray = np.load(f"{self.config.protected_template_dir}/{i+1}_{comb[1]}.npy")
+                    template1 = np.squeeze(template1)
+                    template2 = np.squeeze(template2)
+                    # 计算相似度
+
+                    similarity = self.calculate_template_similarity(template1, template2)
+                    genuine_similarity_list.append(similarity)
+                    pbar.update(1)
+
         end_time1 = time.time()
         mean_time_genuine = (end_time1 - start_time1) / self.n_genuines_combinations
-        print(f"{self.n_genuines_combinations}次真匹配的平均时间：", mean_time_genuine)
-        
+        print(f"\n {self.n_genuines_combinations}次真匹配的平均时间：", mean_time_genuine)
+            
         # 执行假匹配（不同用户之间的匹配）
         start_time2 = time.time()
         for comb in tqdm(impostor_combinations,desc="Imposter Matching"):
