@@ -95,8 +95,8 @@ class EERMetrics:
                     template2 = np.squeeze(template2)
                     # 计算相似度
 
-                    similarity = self.calculate_template_similarity(template1, template2)
-                    genuine_similarity_list.append(similarity)
+                    genuine_similarity = self.calculate_template_similarity(template1, template2)
+                    genuine_similarity_list.append(genuine_similarity)
                     pbar.update(1)
 
         end_time1 = time.time()
@@ -116,8 +116,8 @@ class EERMetrics:
                 template1:NDArray = np.load(f"{self.config.protected_template_dir}/{comb[0]}_4.npy")
                 template2:NDArray = np.load(f"{self.config.protected_template_dir}/{comb[1]}_4.npy")
             # 计算相似度
-            similarity = self.calculate_template_similarity(template1, template2)
-            impostor_similarity_list.append(similarity)
+            impostor_similarity = self.calculate_template_similarity(template1, template2)
+            impostor_similarity_list.append(impostor_similarity)
             
         end_time2 = time.time()
         mean_time_impostor = (end_time2 - start_time2) / self.n_impostor_combinations

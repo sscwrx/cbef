@@ -13,8 +13,11 @@ from tqdm import tqdm
 import scipy as sp 
 import numpy as np
 import time 
-
-@dataclass 
+from rich import print as rprint
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+console = Console()
 
 @dataclass
 class ExperimentConfig:
@@ -36,6 +39,8 @@ class ExperimentConfig:
     timestamp:str = datetime.now().strftime("%Y.%m.%d_%H-%M-%S")
     output_dir: Path = Path("./output")  
     """The output directory for the experiment this time."""
+    expriment_times:int =5 
+
 
     def __str__(self):
         """just for pretty print() """
@@ -82,7 +87,36 @@ class Experiment:
         self.metrics.data_config = self.dataset.config
         self.metrics.config.protected_template_dir = self.config._get_base_dir / "protected_template" 
         Path(self.metrics.config.protected_template_dir).mkdir(parents=True, exist_ok=True)
-    def perform_generating(self)->float:
+        self.config.save_config()
+        console.print(Panel.fit(str(self.config),
+                            title="[bold green]√ Experiment Configuration [/]",
+                            border_style="green"))
+    
+    
+    def run(self)->None:
+        """ run generating and matching """
+        for i in range(1,self.config.expriment_times+1):
+
+            mean_time: float = self.perform_generating()
+            result_tuple: Tuple[float, float, List[float], List[float]]= self.perform_matching() 
+            EER, threshold, geniune_similarity, imposter_similarity = result_tuple 
+
+
+
+            method_name = self.config.method_config.method_name
+            dataset_name = self.config.dataset_config.dataset_name
+            # 创建结果表格
+            table = Table(title=f"Expriment {i} result, \n {method_name} on {dataset_name}", 
+                          show_header=True, header_style="bold magenta")
+            table.add_column("指标", style="cyan")
+            table.add_column("数值", justify="right", style="green")
+            
+            table.add_row("平均生成时间", f"{mean_time*1000:.3f}ms") # mean_time 原单位就是秒
+            table.add_row("等错误率(EER)", f"{EER:.1f}%") # EER 直接就是百分数
+            table.add_row("最佳阈值", f"{threshold:.4f}")
+            console.print(table)
+    
+    def perform_generating(self,seed=1)->float:
         """Perform the experiment to generate hashcodes ."""
 
 
@@ -94,7 +128,7 @@ class Experiment:
 
         for key, embedding in data.items():
             identy_id, sample_id = key 
-            protected_template = self.method.process_feature(embedding)
+            protected_template = self.method.process_feature(embedding,seed=seed)
             save_dir = self.config._get_base_dir / f"protected_template"
             save_dir.mkdir(parents=True,exist_ok=True)
             np.save( save_dir/ f"{identy_id}_{sample_id}.npy", protected_template)
@@ -107,8 +141,8 @@ class Experiment:
         # 保存保护模板
         return mean_time
     
-    def perform_matching(self,expr_times=5) -> Tuple[float, float, List[float], List[float]]:
-        """执行模板匹配实验, 计算EER和最佳阈值。
+    def perform_matching(self) -> Tuple[float, float, List[float], List[float]]:
+        """执行模板匹配实验, 计算指标。
         
         计算过程:
         1. 对同一用户的不同样本进行真匹配(genuine matching)
@@ -122,6 +156,18 @@ class Experiment:
                 - genuine_similarities (List[float]): 真匹配相似度列表
                 - impostor_similarities (List[float]): 假匹配相似度列表
         """
+
+        # 1. 计算相似度，得到真匹配相似度列表和假匹配相似度列表
+
+        # 2. 用各个Metrics去计算指标
+
+        # 3. 还没有指定每次generate的种子
+
+        # 4. 实验应该分为令牌被盗和正常场景。
+
+        # 5. 令牌被盗 就是每个身份都用同样的令牌去generate
+
+        # 6. 正常场景就是每个身份都用不同的令牌去generate
 
         return self.metrics.perform_matching()
 
