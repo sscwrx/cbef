@@ -1,5 +1,5 @@
 from numpy._typing._array_like import NDArray
-from method.avet_base import AVETBase, AVETBaseConfig
+from method.modules.avet_base import AVETBase, AVETBaseConfig
 from dataclasses import dataclass, field
 from typing import Type
 import numpy as np
@@ -19,11 +19,11 @@ class BiAVET(AVETBase):
     def __init__(self, config):
         super().__init__(config)
 
-    def process_feature(self, feature_vector: np.ndarray, seed: int = 1) -> NDArray[np.int32]:
+    def process_feature(self, feature_vector: NDArray, seed: int = 1) -> NDArray[np.int32]:
         """Converts input feature vector to binary vector using AVET transform.
 
         Args:
-            feature_vector (np.ndarray): Input feature vector
+            feature_vector (NDArray): Input feature vector
             seed (int, optional): Random seed. Defaults to 1.
 
         Returns:

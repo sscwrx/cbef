@@ -35,7 +35,7 @@ class AVETBase(BaseMethod):
         """
         pass
 
-    def absolute_value_equations_transform(self, x: np.ndarray, seed: int = 1) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def absolute_value_equations_transform(self, x: NDArray, seed: int = 1) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Performs the absolute value equations transform.
 
         Args:
