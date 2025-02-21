@@ -8,7 +8,7 @@ dataset_names:List[str] = ["LFW","FEI","CASIA-WebFace","ColorFeret",
                            "FVC2002/Db1_a","FVC2002/Db2_a","FVC2002/Db3_a",
                            "FVC2004/Db1_a","FVC2004/Db2_a","FVC2004/Db3_a",]
 
-datasets:Dict[str,BaseDatasetConfig] = {
+DATASET_CONFIGS:Dict[str,BaseDatasetConfig] = {
     "LFW":FaceDatasetConfig(dataset_name="LFW"),
     "FEI":FaceDatasetConfig(dataset_name="FEI"),
     "CASIA-WebFace":FaceDatasetConfig(dataset_name="CASIA-WebFace"),
