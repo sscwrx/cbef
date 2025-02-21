@@ -56,7 +56,7 @@ class ExperimentConfig:
     def _get_base_dir(self):
         """Get the base directory for the output."""
 
-        output = self.output_dir / self.method_config.method_name / f"{self.dataset_config.dataset_name}" / f"{self.expriment_name}_{self.timestamp}" 
+        output = self.output_dir / self.method_config.method_name / f"{self.dataset_config.dataset_name}" / f"{self.timestamp }_{self.expriment_name}" 
         output.mkdir(parents=True, exist_ok=True)
         return output
 
@@ -122,6 +122,7 @@ class Experiment:
                 - genuine_similarities (List[float]): 真匹配相似度列表
                 - impostor_similarities (List[float]): 假匹配相似度列表
         """
+
         return self.metrics.perform_matching()
 
     def log_experiment_results(self,logger, eer_list, optimal_thr_list, dataset,mean_time_list,table_results):
