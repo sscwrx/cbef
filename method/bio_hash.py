@@ -4,12 +4,14 @@ from dataclasses import dataclass, field
 from typing import Type
 import numpy as np 
 from numpy.typing import NDArray
+
 @dataclass
 class BioHashConfig(MethodConfig):
     """Configuration class for BioHash method."""
 
     """The desired length of the resulting BioHashCode."""
     _target: Type = field(default_factory= lambda: BioHash)
+    method_name: str = "BioHash"
     bh_len: int = 40 
 
 class BioHash(BaseMethod):

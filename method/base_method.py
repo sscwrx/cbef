@@ -7,7 +7,9 @@ from config.base_config import BaseConfig
 
 
 class MethodConfig(BaseConfig):
-    method_name:Literal["biohash","avet","bi_avet","in_avet","c_iom"]
+    method_name:Literal["BioHash","AVET","Bi_AVET","In_AVET","C_IOM"]
+
+    
 class BaseMethod(ABC):
         
     config: MethodConfig
