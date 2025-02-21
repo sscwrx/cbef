@@ -33,6 +33,9 @@ class FingerprintDataset(BaseDataset):
             user_id, sample_id = map(int, file_path.stem.split('_'))
             data = sp.io.loadmat(file_path)["Ftemplate"]
             data = np.squeeze(data)
+
+            # 把前213个元素追加到原始数据尾部
+            data = np.append(data, data[:213])
             embeddings_dict[(user_id, sample_id)] = data
         return embeddings_dict
         
