@@ -97,11 +97,9 @@ class Experiment:
         """ run generating and matching """
         for i in range(1,self.config.expriment_times+1):
 
-            mean_time: float = self.perform_generating()
+            mean_time: float = self.perform_generating(seed=i)
             result_tuple: Tuple[float, float, List[float], List[float]]= self.perform_matching() 
             EER, threshold, geniune_similarity, imposter_similarity = result_tuple 
-
-
 
             method_name = self.config.method_config.method_name
             dataset_name = self.config.dataset_config.dataset_name
@@ -112,23 +110,25 @@ class Experiment:
             table.add_column("数值", justify="right", style="green")
             
             table.add_row("平均生成时间", f"{mean_time*1000:.3f}ms") # mean_time 原单位就是秒
-            table.add_row("等错误率(EER)", f"{EER:.1f}%") # EER 直接就是百分数
+            table.add_row("等错误率(EER)", f"{EER:.2f}%") # EER 直接就是百分数
             table.add_row("最佳阈值", f"{threshold:.4f}")
             console.print(table)
     
     def perform_generating(self,seed=1)->float:
         """Perform the experiment to generate hashcodes ."""
 
+        # 重置方法种子,并且生成或更新参数，这样就不用在每次生成模板的时候都重新生成参数
+        self.method.set_seed(seed)
 
         # 加载数据
-
         data = self.dataset.load_data()
+
         # 初始化计时
         start_time = time.time()
-
+        # 令牌被盗场景
         for key, embedding in data.items():
             identy_id, sample_id = key 
-            protected_template = self.method.process_feature(embedding,seed=seed)
+            protected_template = self.method.process_feature(embedding)
             save_dir = self.config._get_base_dir / f"protected_template"
             save_dir.mkdir(parents=True,exist_ok=True)
             np.save( save_dir/ f"{identy_id}_{sample_id}.npy", protected_template)
