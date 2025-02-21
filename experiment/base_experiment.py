@@ -6,7 +6,7 @@ from data.base_dataset import BaseDatasetConfig
 from data.face_dataset import FaceDatasetConfig
 from method.base_method import MethodConfig
 from method.bio_hash import BioHashConfig
-from metrics.performance.performance_metrics import EERMetrics, EERMetricsConfig
+from metrics.performance.eer_metrics import EERMetrics, EERMetricsConfig
 from typing import Literal, Tuple,Union,Type ,Literal,Optional,List
 
 from tqdm import tqdm 
