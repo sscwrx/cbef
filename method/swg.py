@@ -39,6 +39,8 @@ class SWG(BaseMethod):
         # 随机生成的参数
         self.perm:NDArray = self._randperm(self.config.N, self.config.r)
         self.permutation_seed = np.random.permutation(self.config.n*self.config.r)
+        for j in range(self.config.r):
+            self.part_walsh[j,:] = self._walshmatrix[self.perm[j],:]
 
     @property
     def get_seed(self):
@@ -77,8 +79,6 @@ class SWG(BaseMethod):
     
     def process_feature(self, feature_vector: NDArray) -> NDArray:
         
-        for j in range(self.config.r):
-            self.part_walsh[j,:] = self._walshmatrix[self.perm[j],:]
 
         code_list: List[int] = [0]*(self.config.n*self.config.r)
         # 开始生成哈希码
