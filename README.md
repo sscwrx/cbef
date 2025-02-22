@@ -10,7 +10,10 @@ git clone https://gitee.com/futurecodes/avet.git
 安装依赖
 
 ```bash
+conda create -n env4cb python=3.11
+conda activate env4cb
 pip install -r requirements.txt
+
 ```
 
 对单个方法 单个数据集进行验证
