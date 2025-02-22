@@ -3,7 +3,6 @@ import itertools
 import numpy as np
 import time
 
-from sympy import O
 from data.face_dataset import FaceDatasetConfig
 from data.fingerprint_dataset import FingerprintDatasetConfig
 import metrics.performance.CalculateVerificationRate as CalculateVerificationRate

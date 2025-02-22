@@ -1,5 +1,5 @@
 from typing import List, Tuple
-import tyro 
+
 from data.fingerprint_dataset import FingerprintDataset, FingerprintDatasetConfig
 from experiment.base_experiment import ExperimentConfig 
 from data.face_dataset import FaceDatasetConfig 
