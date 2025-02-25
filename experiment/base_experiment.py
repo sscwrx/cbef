@@ -1,4 +1,5 @@
 
+import logging
 from pathlib import Path 
 from datetime import datetime
 from dataclasses import dataclass,field
@@ -18,6 +19,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 console = Console()
+
 
 @dataclass
 class ExperimentConfig:
@@ -59,7 +61,7 @@ class ExperimentConfig:
 
     @property 
     def _get_base_dir(self):
-        """Get the base directory for the output."""
+        """Get the base directory for the specific output."""
 
         output = self.output_dir / self.method_config.method_name / f"{self.dataset_config.dataset_name}" / f"{self.timestamp }_{self.expriment_name}" 
         output.mkdir(parents=True, exist_ok=True)
@@ -91,10 +93,22 @@ class Experiment:
         console.print(Panel.fit(str(self.config),
                             title="[bold green]√ Experiment Configuration [/]",
                             border_style="green"))
-    
-    
+        
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(message)s',
+            handlers=[
+                logging.FileHandler( self.config._get_base_dir / f'results_{datetime.now().strftime("%Y%m%d-%H%M%S")}.log'),
+                logging.StreamHandler()
+            ]
+        )
+        self.logger = logging.getLogger(__name__)
     def run(self)->None:
         """ run generating and matching """
+        best_eer_list = []
+        best_threshold_list = []
+        mean_time_generate_protected_template_list = []
+
         for i in range(1,self.config.expriment_times+1):
             
             # 1. generate protected templates
@@ -106,20 +120,16 @@ class Experiment:
             # 3. perform evaluation
             best_eer ,best_threshold = self.metrics.perform_evaluation(genuine_similarity_list, impostor_similarity_list)
 
-
-            method_name = self.config.method_config.method_name
-            dataset_name = self.config.dataset_config.dataset_name
-            # 创建结果表格
-            table = Table(title=f"Expriment {i} result, \n {method_name} on {dataset_name}", 
-                          show_header=True, header_style="bold magenta")
-            table.add_column("指标", style="cyan")
-            table.add_column("数值", justify="right", style="green")
-            
-            table.add_row("平均生成时间", f"{mean_time_generate_protected_template*1000:.3f}ms") # mean_time 原单位就是秒
-            table.add_row("等错误率(EER)", f"{best_eer:.2f}%") # EER 直接就是百分数
-            table.add_row("最佳阈值", f"{best_threshold:.4f}")
-            console.print(table)
-    
+            best_eer_list.append(best_eer)
+            best_threshold_list.append(best_threshold)
+            mean_time_generate_protected_template_list.append(mean_time_generate_protected_template)
+            self._print_result_table(i, mean_time_generate_protected_template, best_eer, best_threshold, mean_time_genuine, mean_time_impostor)
+        # 4. log the a full experiment result
+        self._log_experiment_results(self.logger, 
+                                     best_eer_list, 
+                                     best_threshold_list, 
+                                     self.config.dataset_config.dataset_name, 
+                                     mean_time_generate_protected_template_list)
     def perform_generating(self,seed=1)->float:
         """Perform the experiment to generate hashcodes ."""
 
@@ -167,20 +177,52 @@ class Experiment:
         EER, threshold = self.metrics.perform_evaluation(genuine_similarity_list, impostor_similarity_list)
         return EER, threshold, genuine_similarity_list, impostor_similarity_list
 
-    def _log_experiment_results(self,logger, eer_list, optimal_thr_list, dataset,mean_time_list,table_results):
-        logger.info("#" * 100)
+    def _log_experiment_results(self, logger, eer_list, optimal_thr_list, dataset, mean_time_list):
+        separator = "#" * 100
+        logger.info(separator)
         logger.info(f"\nFinal results for {dataset}:")
-        logger.info(f"Mean EER: {np.mean(eer_list):.2f}")
-        logger.info(f"Mean Optimal Threshold: {np.mean(optimal_thr_list):.2f}")
-        logger.info(f"Standard Deviation of EER: {np.std(eer_list):.2f}")
-        logger.info(f"Standard Deviation of Optimal Threshold: {np.std(optimal_thr_list):.2f}")
-        logger.info(f"Max EER: {np.max(eer_list):.2f}")
-        logger.info(f"Min EER: {np.min(eer_list):.2f}")
-        logger.info(f"Max Optimal Threshold: {np.max(optimal_thr_list):.2f}")
-        logger.info(f"Min Optimal Threshold: {np.min(optimal_thr_list):.2f}")
-        logger.info(f"Mean time for generating protected templates: {np.mean(mean_time_list)} s, max time: {np.max(mean_time_list)} s. min time: {np.min(mean_time_list)} s.",)
-        table_results.append([dataset, np.mean(eer_list)])
-        logger.info("#" * 100)
+        
+        # EER Statistics
+        mean_eer = np.mean(eer_list)
+        std_eer = np.std(eer_list)
+        max_eer = np.max(eer_list)
+        min_eer = np.min(eer_list)
+        
+        # Threshold Statistics
+        mean_thr = np.mean(optimal_thr_list)
+        std_thr = np.std(optimal_thr_list)
+        max_thr = np.max(optimal_thr_list)
+        min_thr = np.min(optimal_thr_list)
+        
+        # Time Statistics
+        mean_time = np.mean(mean_time_list)
+        max_time = np.max(mean_time_list)
+        min_time = np.min(mean_time_list)
+        
+        # Output formatting
+        logger.info("EER Statistics:")
+        logger.info(f"  Mean: {mean_eer:.2f}%")
+        logger.info(f"  Std Dev: {std_eer:.2f}%")
+        logger.info(f"  Max: {max_eer:.2f}%")
+        logger.info(f"  Min: {min_eer:.2f}%")
+        
+        logger.info("\nThreshold Statistics:")
+        logger.info(f"  Mean: {mean_thr:.2f}")
+        logger.info(f"  Std Dev: {std_thr:.2f}")
+        logger.info(f"  Max: {max_thr:.2f}")
+        logger.info(f"  Min: {min_thr:.2f}")
+        
+        logger.info("\nTemplate Generation Time:")
+        logger.info(f"  Mean: {mean_time*1000:.2f} ms")
+        logger.info(f"  Max: {max_time*1000:.2f} ms")
+        logger.info(f"  Min: {min_time*1000:.2f} ms")
+        
+        # For reference, also log the raw lists
+        logger.info(f"\nRaw Data:")
+        logger.info(f"  EER values: {[f'{x:.2f}' for x in eer_list]}")
+        logger.info(f"  Threshold values: {[f'{x:.2f}' for x in optimal_thr_list]}")
+        
+        logger.info(separator)
 
     def _print_result_table(self, i: int, mean_time_generate: float, eer: float, threshold: float, 
                         mean_time_genuine: float =0.0, mean_time_impostor: float = 0.0) -> None:
@@ -198,7 +240,7 @@ class Experiment:
         dataset_name = self.config.dataset_config.dataset_name
         
         # 创建结果表格
-        table = Table(title=f"Expriment {i} result, \n {method_name} on {dataset_name}", 
+        table = Table(title=f"{method_name} on {dataset_name} \n Expriment ({i}/{self.config.expriment_times}) result, ", 
                     show_header=True, header_style="bold magenta")
         table.add_column("指标", style="cyan")
         table.add_column("数值", justify="right", style="green")
