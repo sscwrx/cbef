@@ -96,10 +96,16 @@ class Experiment:
     def run(self)->None:
         """ run generating and matching """
         for i in range(1,self.config.expriment_times+1):
+            
+            # 1. generate protected templates
+            mean_time_generate_protected_template: float = self.perform_generating(seed=i)
 
-            mean_time: float = self.perform_generating(seed=i)
-            result_tuple: Tuple[float, float, List[float], List[float]]= self.perform_matching() 
-            EER, threshold, geniune_similarity, imposter_similarity = result_tuple 
+            # 2. perform matching
+            genuine_similarity_list, impostor_similarity_list, mean_time_genuine, mean_time_impostor = self.metrics.perform_matching()
+
+            # 3. perform evaluation
+            best_eer ,best_threshold = self.metrics.perform_evaluation(genuine_similarity_list, impostor_similarity_list)
+
 
             method_name = self.config.method_config.method_name
             dataset_name = self.config.dataset_config.dataset_name
@@ -109,9 +115,9 @@ class Experiment:
             table.add_column("指标", style="cyan")
             table.add_column("数值", justify="right", style="green")
             
-            table.add_row("平均生成时间", f"{mean_time*1000:.3f}ms") # mean_time 原单位就是秒
-            table.add_row("等错误率(EER)", f"{EER:.2f}%") # EER 直接就是百分数
-            table.add_row("最佳阈值", f"{threshold:.4f}")
+            table.add_row("平均生成时间", f"{mean_time_generate_protected_template*1000:.3f}ms") # mean_time 原单位就是秒
+            table.add_row("等错误率(EER)", f"{best_eer:.2f}%") # EER 直接就是百分数
+            table.add_row("最佳阈值", f"{best_threshold:.4f}")
             console.print(table)
     
     def perform_generating(self,seed=1)->float:
@@ -141,7 +147,7 @@ class Experiment:
         # 保存保护模板
         return mean_time
     
-    def perform_matching(self) -> Tuple[float, float, List[float], List[float]]:
+    def perform_matching_and_evaluations(self) -> Tuple[float, float, List[float], List[float]]:
         """执行模板匹配实验, 计算指标。
         
         计算过程:
@@ -156,22 +162,12 @@ class Experiment:
                 - genuine_similarities (List[float]): 真匹配相似度列表
                 - impostor_similarities (List[float]): 假匹配相似度列表
         """
+        result: Tuple[List[float], List[float], float, float] = self.metrics.perform_matching()
+        genuine_similarity_list, impostor_similarity_list, mean_time_genuine, mean_time_impostor = result
+        EER, threshold = self.metrics.perform_evaluation(genuine_similarity_list, impostor_similarity_list)
+        return EER, threshold, genuine_similarity_list, impostor_similarity_list
 
-        # 1. 计算相似度，得到真匹配相似度列表和假匹配相似度列表
-
-        # 2. 用各个Metrics去计算指标
-
-        # 3. 还没有指定每次generate的种子
-
-        # 4. 实验应该分为令牌被盗和正常场景。
-
-        # 5. 令牌被盗 就是每个身份都用同样的令牌去generate
-
-        # 6. 正常场景就是每个身份都用不同的令牌去generate
-
-        return self.metrics.perform_matching()
-
-    def log_experiment_results(self,logger, eer_list, optimal_thr_list, dataset,mean_time_list,table_results):
+    def _log_experiment_results(self,logger, eer_list, optimal_thr_list, dataset,mean_time_list,table_results):
         logger.info("#" * 100)
         logger.info(f"\nFinal results for {dataset}:")
         logger.info(f"Mean EER: {np.mean(eer_list):.2f}")
@@ -185,6 +181,39 @@ class Experiment:
         logger.info(f"Mean time for generating protected templates: {np.mean(mean_time_list)} s, max time: {np.max(mean_time_list)} s. min time: {np.min(mean_time_list)} s.",)
         table_results.append([dataset, np.mean(eer_list)])
         logger.info("#" * 100)
+
+    def _print_result_table(self, i: int, mean_time_generate: float, eer: float, threshold: float, 
+                        mean_time_genuine: float =0.0, mean_time_impostor: float = 0.0) -> None:
+        """打印实验结果表格
+        
+        Args:
+            i (int): 实验次数
+            mean_time_generate (float): 平均生成时间（秒）
+            eer (float): 等错误率
+            threshold (float): 最佳阈值
+            mean_time_genuine (float, optional): 真匹配平均时间（秒）
+            mean_time_impostor (float, optional): 假匹配平均时间（秒）
+        """
+        method_name = self.config.method_config.method_name
+        dataset_name = self.config.dataset_config.dataset_name
+        
+        # 创建结果表格
+        table = Table(title=f"Expriment {i} result, \n {method_name} on {dataset_name}", 
+                    show_header=True, header_style="bold magenta")
+        table.add_column("指标", style="cyan")
+        table.add_column("数值", justify="right", style="green")
+        
+        table.add_row("平均生成时间", f"{mean_time_generate*1000:.3f}ms")  # mean_time 原单位就是秒
+        
+        # 如果提供了匹配时间，则添加到表格中
+        if mean_time_genuine is not None:
+            table.add_row("真匹配平均时间", f"{mean_time_genuine*1000:.3f}ms")
+        if mean_time_impostor is not None:
+            table.add_row("假匹配平均时间", f"{mean_time_impostor*1000:.3f}ms")
+            
+        table.add_row("等错误率(EER)", f"{eer:.2f}%")  # EER 直接就是百分数
+        table.add_row("最佳阈值", f"{threshold:.4f}")
+        console.print(table)
 
 if __name__ == "__main__":
 
@@ -201,4 +230,4 @@ if __name__ == "__main__":
     experiment:Experiment = config.setup()
 
     mean_time = experiment.perform_generating()
-    result_tuple= experiment.perform_matching() 
+
