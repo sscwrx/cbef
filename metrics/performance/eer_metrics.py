@@ -88,7 +88,7 @@ class EERMetrics:
         
         # 执行真匹配（同一用户的不同样本）
         start_time1 = time.time()
-        with tqdm(total=self.n_genuines_combinations, desc="真实匹配") as pbar:
+        with tqdm(total=self.n_genuines_combinations, desc="真匹配") as pbar:
             for i in range(self.data_config.n_subjects):
                 for comb in genuine_combinations: 
                     # 加载第一个模板
@@ -105,11 +105,11 @@ class EERMetrics:
 
         end_time1 = time.time()
         mean_time_genuine = (end_time1 - start_time1) / self.n_genuines_combinations
-        print(f"\n {self.n_genuines_combinations}次真匹配的平均时间：{mean_time_genuine:.6f}秒")
+        # print(f"\n {self.n_genuines_combinations}次真匹配的平均时间：{mean_time_genuine:.6f}秒")
             
         # 执行假匹配（不同用户之间的匹配）
         start_time2 = time.time()
-        with tqdm(total=self.n_impostor_combinations, desc="虚假匹配") as pbar:
+        with tqdm(total=self.n_impostor_combinations, desc="假匹配") as pbar:
             for comb in impostor_combinations:
                 # 加载第一个模板
                 try:
@@ -127,7 +127,7 @@ class EERMetrics:
                 
         end_time2 = time.time()
         mean_time_impostor = (end_time2 - start_time2) / self.n_impostor_combinations
-        print(f"{self.n_impostor_combinations}次假匹配的平均时间: {mean_time_impostor:.6f}秒")
+        # print(f"{self.n_impostor_combinations}次假匹配的平均时间: {mean_time_impostor:.6f}秒")
         
         return genuine_similarity_list, impostor_similarity_list, mean_time_genuine, mean_time_impostor
 
