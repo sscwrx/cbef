@@ -1,6 +1,7 @@
+from typing import Tuple,List
 import numpy as np
-from numpy.typing import NDArray 
-def caculateVerificationRate(thr, client, impostor):
+
+def caculateVerificationRate(thr, genuine, impostor):
     #计算错误接受率FAR:False Accept Rate
     FA  = 0
     for i in range(impostor.__len__()):
@@ -10,20 +11,21 @@ def caculateVerificationRate(thr, client, impostor):
     #计算错误拒绝率FRR:False Reject Rate和真实接受率Genuine Accept Rate
     FR = 0
     GA = 0
-    for j in range(client.__len__()):
-        if client[j] < thr:
+    for j in range(genuine.__len__()):
+        if genuine[j] < thr:
             FR = FR + 1
-        elif client[j] > thr:
+        elif genuine[j] > thr:
             GA = GA + 1
-    FRR = (FR / client.__len__())*100
-    GAR = (GA / client.__len__())*100
+    FRR = (FR / genuine.__len__())*100
+    GAR = (GA / genuine.__len__())*100
     #计算等错误率
-    TER = (FA + FR)/(client.__len__() + impostor.__len__())
+    TER = (FA + FR)/(genuine.__len__() + impostor.__len__())
     #计算验证率Verification Rate
     TSR = (1 - TER)*100
     #print(TSR, FAR, FRR, GAR)
     return TSR, FAR, FRR, GAR
-def computePerformance(genuine, impostor, step,verbose=False):
+
+def computePerformance(genuine, impostor, step,verbose=False)-> Tuple[float,float,List[int],List[int]]:
     #查找迭代的起始值和终止值，以找到最优阈值。
     start = np.min(genuine)
     if np.min(impostor) < start:
@@ -68,6 +70,6 @@ def computePerformance(genuine, impostor, step,verbose=False):
         print('等错误率Equal Error Rate：%.6f' % (EER))
 
 
-    return  EER, optimal_thr
+    return  EER, optimal_thr,mFAR,mGAR
 
 

@@ -131,7 +131,7 @@ class EERMetrics:
         
         return genuine_similarity_list, impostor_similarity_list, mean_time_genuine, mean_time_impostor
 
-    def perform_evaluation(self, genuine_similarity_list: List[float], impostor_similarity_list: List[float]) -> Tuple[float, float]:
+    def perform_evaluation(self, genuine_similarity_list: List[float], impostor_similarity_list: List[float]) -> Tuple[float, float, List[int], List[int]]:
         """
         计算等错误率(EER)和最佳阈值
         
@@ -142,8 +142,8 @@ class EERMetrics:
         Returns:
             Tuple[float, float, float]: EER, 最佳阈值, 最佳阈值对应的FAR
         """
-        best_eer, best_thrshold = CalculateVerificationRate.computePerformance(genuine_similarity_list, impostor_similarity_list,step=0.001)
-        return best_eer, best_thrshold
+        best_eer, best_thrshold,far_list,gar_list = CalculateVerificationRate.computePerformance(genuine_similarity_list, impostor_similarity_list,step=0.001)
+        return best_eer, best_thrshold,far_list,gar_list
     
     @property
     def n_genuines_combinations(self):
