@@ -118,12 +118,14 @@ class Experiment:
             genuine_similarity_list, impostor_similarity_list, mean_time_genuine, mean_time_impostor = self.metrics.perform_matching()
 
             # 3. perform evaluation
-            best_eer ,best_threshold = self.metrics.perform_evaluation(genuine_similarity_list, impostor_similarity_list)
+            best_eer ,best_threshold ,far_list,gar_list= self.metrics.perform_evaluation(genuine_similarity_list, impostor_similarity_list)
 
             best_eer_list.append(best_eer)
             best_threshold_list.append(best_threshold)
             mean_time_generate_protected_template_list.append(mean_time_generate_protected_template)
-            self._print_result_table(i, mean_time_generate_protected_template, best_eer, best_threshold, mean_time_genuine, mean_time_impostor)
+
+
+            # self._print_result_table(i, mean_time_generate_protected_template, best_eer, best_threshold, mean_time_genuine, mean_time_impostor)
         # 4. log the a full experiment result
         self._log_experiment_results(self.logger, 
                                      best_eer_list, 
@@ -157,26 +159,6 @@ class Experiment:
         # 保存保护模板
         return mean_time
     
-    def perform_matching_and_evaluations(self) -> Tuple[float, float, List[float], List[float]]:
-        """执行模板匹配实验, 计算指标。
-        
-        计算过程:
-        1. 对同一用户的不同样本进行真匹配(genuine matching)
-        2. 对不同用户的样本进行假匹配(impostor matching)
-        3. 根据真假匹配的相似度分布计算EER和最佳阈值
-        
-        Returns:
-            Tuple[float,float,List[float],List[float]]: 返回一个元组, 包含:
-                - EER (float): 等错误率, 表示FAR=FRR时的错误率
-                - threshold (float): 最佳判决阈值, 使FAR≈FRR
-                - genuine_similarities (List[float]): 真匹配相似度列表
-                - impostor_similarities (List[float]): 假匹配相似度列表
-        """
-        result: Tuple[List[float], List[float], float, float] = self.metrics.perform_matching()
-        genuine_similarity_list, impostor_similarity_list, mean_time_genuine, mean_time_impostor = result
-        EER, threshold = self.metrics.perform_evaluation(genuine_similarity_list, impostor_similarity_list)
-        return EER, threshold, genuine_similarity_list, impostor_similarity_list
-
     def _log_experiment_results(self, logger, eer_list, optimal_thr_list, dataset, mean_time_list):
         separator = "#" * 100
         logger.info(separator)
