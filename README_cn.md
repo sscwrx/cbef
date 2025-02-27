@@ -1,6 +1,6 @@
 # 生物特征模板保护方法评估框架
 
- [中文](README_cn.md) | [English](README.md)
+ [中文](README_cn.md) | [English](README_en.md)
 
 这个仓库实现了多种生物特征模板保护方法和评估框架。
 
