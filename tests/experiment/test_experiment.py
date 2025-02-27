@@ -115,6 +115,7 @@ class TestExperiment:
             
             mock_metrics = MagicMock()
             mock_metrics.perform_evaluation.return_value = (0.1, 0.5, [0.1], [0.9])
+            mock_metrics.calculate_DI.return_value = 2.5  # 添加 calculate_DI 的返回值
             mock_metrics_setup.return_value = mock_metrics
             
             experiment = Experiment(experiment_config)
@@ -125,6 +126,7 @@ class TestExperiment:
                 
                 assert mock_verifier.perform_matching.call_count == experiment_config.expriment_times
                 assert mock_metrics.perform_evaluation.call_count == experiment_config.expriment_times
+                assert mock_metrics.calculate_DI.call_count == experiment_config.expriment_times  # 验证 calculate_DI 被调用
 
     def test_log_experiment_results(self, experiment_config):
         with patch.object(experiment_config.dataset_config, 'setup'), \

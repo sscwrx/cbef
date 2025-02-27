@@ -51,4 +51,18 @@ class PerformanceMetrics:
         assert len(genuine_similarity_list)>0 or len(impostor_similarity_list)>0, "No similarity data provided"
         best_eer, best_thrshold,far_list,gar_list = CalculateVerificationRate.computePerformance(genuine_similarity_list, impostor_similarity_list,step=0.001)
         return best_eer, best_thrshold,far_list,gar_list
-    
+
+    def calculate_DI(self, genuine_similarity_list:List[float], impostor_similarity_list:List[float])->float:
+        """计算 Decidability Index (DI)
+        
+        输入:真匹配相似度列表,假匹配相似度列表
+        输出:DI(flaot)
+        """
+        mean_genuine_similarity = np.mean(genuine_similarity_list)
+        std_genuine_simlarity = np.var(genuine_similarity_list)
+        mean_imposter_similarity = np.mean(impostor_similarity_list)
+        std_imposter_similarity = np.var(impostor_similarity_list)
+        assert std_genuine_simlarity != 0 or std_imposter_similarity != 0, "std_genuine_simlarity or std_imposter_similarity is zero"
+        assert mean_imposter_similarity !=0 or mean_genuine_similarity != 0, "mean_imposter_similarity or mean_genuine_similarity is zero"
+        DI = np.abs(mean_genuine_similarity - mean_imposter_similarity) / np.sqrt((std_genuine_simlarity+std_imposter_similarity)/2)
+        return DI 
