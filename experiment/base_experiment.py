@@ -1,24 +1,26 @@
-
 import logging
-from pathlib import Path 
+import time
 from datetime import datetime
-from dataclasses import dataclass,field
+from pathlib import Path 
+from typing import Literal, Optional, Tuple, Type, Union, List
+from dataclasses import dataclass, field
+
+from cv2 import log
+import numpy as np
+import scipy as sp
+from tqdm import tqdm
+
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
 from data.base_dataset import BaseDatasetConfig
 from data.face_dataset import FaceDatasetConfig
 from method.base_method import MethodConfig
 from method.bio_hash import BioHashConfig
-from verification.verify import VerifierConfig
 from metrics.performance_metrics import PerformanceMetrics, PerformanceMetricsConfig
-from typing import Literal, Tuple,Union,Type ,Literal,Optional,List
-
-from tqdm import tqdm 
-import scipy as sp 
-import numpy as np
-import time 
-from rich import print as rprint
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
+from verification.verify import VerifierConfig
+from visualization.performance_plot import plot_roc_curve,plot_score_distributions
 console = Console()
 
 
@@ -118,7 +120,7 @@ class Experiment:
         best_eer_list = []
         best_threshold_list = []
         mean_time_generate_protected_template_list = []
-
+        decidability_index_list = []
         for i in range(1,self.config.expriment_times+1):
             
             # 1. generate protected templates
@@ -131,25 +133,35 @@ class Experiment:
             # 3.1 EER
             best_eer ,best_threshold ,far_list,gar_list= self.metrics.perform_evaluation(genuine_similarity_list, impostor_similarity_list)
 
+
+            # 3.2 Decidability Index 
+            decidability_index = self.metrics.calculate_DI(genuine_similarity_list, impostor_similarity_list)
+
             best_eer_list.append(best_eer)
             best_threshold_list.append(best_threshold)
             mean_time_generate_protected_template_list.append(mean_time_generate_protected_template)
-
-            # 3.2 Decidability Index 
-            DI = self.metrics.calculate_DI(genuine_similarity_list, impostor_similarity_list)
+            decidability_index_list.append(decidability_index)
+            
+            # 4. plot  similar distributions
+            plot_score_distributions(self,
+                                     genuine_similarity_list=genuine_similarity_list,
+                                     impostor_similarity_list=impostor_similarity_list,
+                                     title=f"Similarity Distribution: {self.config.method_config.method_name} on {self.config.dataset_config.dataset_name}",
+                                     experiment_num=i)
             
             self._print_result_table(i,
                                     mean_time_generate_protected_template,
                                     best_eer, best_threshold,
-                                    DI,
+                                    decidability_index,
                                     mean_time_genuine,
                                      mean_time_impostor)
-        # 4. log the a full experiment result
+        # log the a full experiment result
         self._log_experiment_results(self.logger, 
                                      best_eer_list, 
                                      best_threshold_list, 
                                      self.config.dataset_config.dataset_name, 
-                                     mean_time_generate_protected_template_list)
+                                     mean_time_generate_protected_template_list,
+                                     decidability_index_list)
     def perform_generating(self,seed=1)->float:
         """Perform the experiment to generate hashcodes ."""
 
@@ -175,7 +187,7 @@ class Experiment:
         # 保存保护模板
         return mean_time
     
-    def _log_experiment_results(self, logger, eer_list, optimal_thr_list, dataset, mean_time_list):
+    def _log_experiment_results(self, logger, eer_list, optimal_thr_list, dataset, mean_time_list,dect_index_list) -> None:
         separator = "#" * 100
         logger.info(separator)
         logger.info(f"\nFinal results for {dataset}:")
@@ -197,12 +209,18 @@ class Experiment:
         max_time = np.max(mean_time_list)
         min_time = np.min(mean_time_list)
         
+        # DI Statistics
+        mean_DI = np.mean(dect_index_list)
+        max_di = np.max(dect_index_list)
+        min_di = np.min(dect_index_list)
+
+
         # Output formatting
         logger.info("EER Statistics:")
-        logger.info(f"  Mean: {mean_eer:.2f}%")
-        logger.info(f"  Std Dev: {std_eer:.2f}%")
-        logger.info(f"  Max: {max_eer:.2f}%")
-        logger.info(f"  Min: {min_eer:.2f}%")
+        logger.info(f"  Mean: {mean_eer*100:.2f}%")
+        logger.info(f"  Std Dev: {std_eer*100:.2f}%")
+        logger.info(f"  Max: {max_eer*100:.2f}%")
+        logger.info(f"  Min: {min_eer*100:.2f}%")
         
         logger.info("\nThreshold Statistics:")
         logger.info(f"  Mean: {mean_thr:.2f}")
@@ -210,16 +228,24 @@ class Experiment:
         logger.info(f"  Max: {max_thr:.2f}")
         logger.info(f"  Min: {min_thr:.2f}")
         
+        logger.info(f"\nDecidability Index Statistics:")
+        logger.info(f"  Decidability Index:")
+        logger.info(f"  Mean: {mean_DI:.4f}")
+        logger.info(f"  Max: {max_di:.4f}")
+        logger.info(f"  Min: {min_di:.4f}")
+
         logger.info("\nTemplate Generation Time:")
         logger.info(f"  Mean: {mean_time*1000:.2f} ms")
         logger.info(f"  Max: {max_time*1000:.2f} ms")
         logger.info(f"  Min: {min_time*1000:.2f} ms")
         
+        
+
         # For reference, also log the raw lists
         logger.info(f"\nRaw Data:")
-        logger.info(f"  EER values: {[f'{x:.2f}' for x in eer_list]}")
+        logger.info(f"  EER values: {[f'{x*100:.2f}%' for x in eer_list]}")
         logger.info(f"  Threshold values: {[f'{x:.2f}' for x in optimal_thr_list]}")
-        
+        logger.info(f"  Decidability Index values: {[f'{x:.4f}' for x in dect_index_list]}")
         logger.info(separator)
 
     def _print_result_table(self, i: int, mean_time_generate: float, eer: float, threshold: float, 
@@ -251,7 +277,7 @@ class Experiment:
         if mean_time_impostor is not None:
             table.add_row("Mean Impostor Match Time", f"{mean_time_impostor*1000:.3f}ms")
             
-        table.add_row("Equal Error Rate (EER)", f"{eer:.2f}%")  # EER is already percentage
+        table.add_row("Equal Error Rate (EER)", f"{eer*100:.2f}%")  # EER is already percentage
         table.add_row("Optimal Threshold", f"{threshold:.4f}")
         table.add_row("Decidability Index (DI)", f"{DI:.4f}")
         console.print(table)
