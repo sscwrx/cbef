@@ -95,7 +95,6 @@ Note: The data has been preprocessed into 512-dimensional vectors using arcface 
 - [x] EER (Equal Error Rate) Used to evaluate the system's overall recognition accuracy and error rate
 - [x] DI (Decidability Index)
 - [ ] RI (Recognition Index)
-- [ ] ROC curve (Receiver Operating Characteristic) Visually demonstrates system performance
 
 #### Security
 

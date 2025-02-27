@@ -95,7 +95,6 @@ if __name__ == "__main__":
 - [x] EER (Equal Error Rate) 用于评估系统的整体识别准确性和错误率
 - [x] DI (Decidability Index)
 - [ ] RI (Recognition Index)
-- [ ] ROC曲线（Receiver Operating Characteristic）直观展示系统的性能表现
 
 #### Security
 
