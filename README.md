@@ -1,7 +1,5 @@
 # Biometric Template Protection Method Evaluation Framework
 
-[English](README.md) | [中文](README_cn.md)
-
 This repository implements various biometric template protection methods and an evaluation framework.
 
 ## Quick Start
