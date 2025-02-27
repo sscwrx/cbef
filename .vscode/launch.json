@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        }
+
+    ]
+}

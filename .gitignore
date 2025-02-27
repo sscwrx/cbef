@@ -6,3 +6,4 @@ protectedTemplates
 *.mat
 *.npz
 *.csv
+*output
