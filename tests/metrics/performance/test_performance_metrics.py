@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from metrics.performance_metrics import PerformanceMetrics, PerformanceMetricsConfig
-from metrics.CalculateVerificationRate import computePerformance, caculateVerificationRate
+from metrics.CalculateVerificationRate import computePerformance, calculateVerificationRate
 
 @pytest.fixture
 def mock_config():
@@ -31,10 +31,10 @@ def test_compute_performance():
     assert isinstance(far_list, list)
     assert isinstance(gar_list, list)
 
-def test_caculate_verification_rate():
+def test_calculate_verification_rate():
     genuine = [0.9, 0.8, 0.85]
     impostor = [0.1, 0.2, 0.15]
-    tsr, far, frr, gar = caculateVerificationRate(0.5, genuine, impostor)
+    tsr, far, frr, gar = calculateVerificationRate(0.5, genuine, impostor)
     assert isinstance(tsr, float)
     assert isinstance(far, float)
     assert isinstance(frr, float)
