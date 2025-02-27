@@ -5,7 +5,7 @@ import time
 
 from data.face_dataset import FaceDatasetConfig
 from data.fingerprint_dataset import FingerprintDatasetConfig
-import metrics.performance.CalculateVerificationRate as CalculateVerificationRate
+import metrics.CalculateVerificationRate as CalculateVerificationRate
 
 import scipy as sp
 from scipy.spatial import distance
@@ -19,10 +19,10 @@ from dataclasses import dataclass,field
 from numpy.typing import NDArray
 from tqdm import tqdm
 @dataclass
-class EERMetricsConfig(BaseConfig):
+class PerformanceMetricsConfig(BaseConfig):
     """Configuration class for metrics."""
 
-    _target: Type = field(default_factory= lambda: EERMetrics) 
+    _target: Type = field(default_factory= lambda: PerformanceMetrics) 
     """目标类型"""
 
     measure: Optional[Literal["cosine", "euclidean", "hamming", "jaccard"]] = None 
@@ -34,14 +34,14 @@ class EERMetricsConfig(BaseConfig):
     protected_template_dir: Path = Path("./")
     """Path to protected templates, set it in ExperimentConfig""" 
 
-class EERMetrics:
-    """ Class for calculating EER and threshold."""
+class PerformanceMetrics:
+    """ Class for calculating Performance and threshold."""
 
-    config: EERMetricsConfig
+    config: PerformanceMetricsConfig
     data_config: BaseDatasetConfig
     
-    def __init__(self, config: EERMetricsConfig):
-        self.config:EERMetricsConfig = config
+    def __init__(self, config: PerformanceMetricsConfig):
+        self.config:PerformanceMetricsConfig = config
         assert self.config.measure is not None, "Measure must be provided." 
 
         

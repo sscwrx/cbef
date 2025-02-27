@@ -3,12 +3,12 @@ import numpy as np
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from metrics.performance.eer_metrics import EERMetrics, EERMetricsConfig
-from metrics.performance.CalculateVerificationRate import computePerformance, caculateVerificationRate
+from metrics.performance_metrics import PerformanceMetrics, PerformanceMetricsConfig
+from metrics.CalculateVerificationRate import computePerformance, caculateVerificationRate
 
 @pytest.fixture
 def mock_config():
-    return EERMetricsConfig(
+    return PerformanceMetricsConfig(
         measure="cosine",
         verbose=False,
         protected_template_dir=Path("./test_data")
@@ -22,7 +22,7 @@ def mock_data_config():
     return MockDataConfig()
 
 def test_calculate_template_similarity_cosine(mock_config):
-    eer_metrics = EERMetrics(mock_config)
+    eer_metrics = PerformanceMetrics(mock_config)
     template1 = np.array([1, 0, 0])
     template2 = np.array([1, 0, 0])
     similarity = eer_metrics._calculate_template_similarity(template1, template2)
@@ -30,7 +30,7 @@ def test_calculate_template_similarity_cosine(mock_config):
 
 def test_calculate_template_similarity_euclidean(mock_config):
     mock_config.measure = "euclidean"
-    eer_metrics = EERMetrics(mock_config)
+    eer_metrics = PerformanceMetrics(mock_config)
     template1 = np.array([1, 0, 0])
     template2 = np.array([0, 1, 0])
     similarity = eer_metrics._calculate_template_similarity(template1, template2)
@@ -38,7 +38,7 @@ def test_calculate_template_similarity_euclidean(mock_config):
 
 def test_calculate_template_similarity_hamming(mock_config):
     mock_config.measure = "hamming"
-    eer_metrics = EERMetrics(mock_config)
+    eer_metrics = PerformanceMetrics(mock_config)
     template1 = np.array([1, 0, 1])
     template2 = np.array([1, 1, 0])
     similarity = eer_metrics._calculate_template_similarity(template1, template2)
@@ -46,7 +46,7 @@ def test_calculate_template_similarity_hamming(mock_config):
 
 def test_calculate_template_similarity_jaccard(mock_config):
     mock_config.measure = "jaccard"
-    eer_metrics = EERMetrics(mock_config)
+    eer_metrics = PerformanceMetrics(mock_config)
     template1 = np.array([1, 0, 1])
     template2 = np.array([1, 1, 0])
     similarity = eer_metrics._calculate_template_similarity(template1, template2)
@@ -83,7 +83,7 @@ def test_perform_matching(mock_load, mock_config, mock_data_config):
     # 设置 side_effect
     mock_load.side_effect = [genuine_template] * n_genuine + [impostor_template] * n_impostor
     
-    eer_metrics = EERMetrics(mock_config)
+    eer_metrics = PerformanceMetrics(mock_config)
     eer_metrics.data_config = mock_data_config
     
     genuine_sim, impostor_sim, _, _ = eer_metrics.perform_matching()
