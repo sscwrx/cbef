@@ -76,14 +76,14 @@ if __name__ == "__main__":
 - [x] BioHash
 - [x] AVET, LiAVET andBiAVET
 - [x] LiAVET
+- [x] C_IOM
 - [ ] simHash
-- [ ] C_IOM
 - [ ] DRH
 
 ### Matching  
 
 - [x] Similarity (Score)
-- [ ] Bin plot (genuine, imposter)
+- [x] Bin plot (genuine, imposter)
 - [ ] Bin plot (genuine,  genuine-two seed) one sample with two seed for imposter matching examine Unlinkablity
 
 ### Metrics
