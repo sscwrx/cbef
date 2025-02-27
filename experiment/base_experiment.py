@@ -7,7 +7,7 @@ from data.base_dataset import BaseDatasetConfig
 from data.face_dataset import FaceDatasetConfig
 from method.base_method import MethodConfig
 from method.bio_hash import BioHashConfig
-from verifier.verify import VerifierConfig
+from verification.verify import VerifierConfig
 from metrics.performance_metrics import PerformanceMetrics, PerformanceMetricsConfig
 from typing import Literal, Tuple,Union,Type ,Literal,Optional,List
 
