@@ -128,9 +128,9 @@ class Experiment:
 
             # 3.2 Decidability Index 
             mean_genuine_similarity = np.mean(genuine_similarity_list)
-            std_genuine_simlarity = np.std(genuine_similarity_list)
+            std_genuine_simlarity = np.var(genuine_similarity_list)
             mean_imposter_similarity = np.mean(impostor_similarity_list)
-            std_imposter_similarity = np.std(impostor_similarity_list)
+            std_imposter_similarity = np.var(impostor_similarity_list)
             assert std_genuine_simlarity != 0 or std_imposter_similarity != 0, "std_genuine_simlarity or std_imposter_similarity is zero"
             DI = np.abs(mean_genuine_similarity - mean_imposter_similarity) / np.sqrt((std_genuine_simlarity+std_imposter_similarity)/2)
             self._print_result_table(i,
