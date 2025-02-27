@@ -4,6 +4,7 @@ from method.bio_hash import BioHashConfig
 from method.bi_avet import BiAVETConfig
 from method.in_avet import InAVETConfig
 from method.swg import SWGConfig
+from method.chaos_based_IoM import ChaosBasedIoMConfig
 from verification.verify import VerifierConfig
 
 
@@ -15,5 +16,5 @@ METHOD_CONFIGS: Dict[str,Tuple[MethodConfig,VerifierConfig]] = {
     "AVET": (SWGConfig(),VerifierConfig(measure="cosine")),
     "Bi_AVET": (BiAVETConfig(),VerifierConfig(measure="hamming")),
     "In_AVET": (InAVETConfig(),VerifierConfig(measure="jaccard")),
-    "C_IOM": (SWGConfig(),VerifierConfig(measure="cosine"))
+    "C_IOM": (ChaosBasedIoMConfig(),VerifierConfig(measure="cosine"))
 }
