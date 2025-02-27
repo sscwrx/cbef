@@ -7,6 +7,7 @@ from data.base_dataset import BaseDatasetConfig
 from data.face_dataset import FaceDatasetConfig
 from method.base_method import MethodConfig
 from method.bio_hash import BioHashConfig
+from verifier.verify import VerifierConfig
 from metrics.performance_metrics import PerformanceMetrics, PerformanceMetricsConfig
 from typing import Literal, Tuple,Union,Type ,Literal,Optional,List
 
@@ -32,8 +33,11 @@ class ExperimentConfig:
     method_config: MethodConfig = field(default_factory=BioHashConfig)
     # 数据集配置 
     dataset_config: BaseDatasetConfig = field(default_factory=FaceDatasetConfig)
+    # Matching配置
+    verifier_config:VerifierConfig = field(default_factory=VerifierConfig)
     # 评价指标配置
     metrics_config: PerformanceMetricsConfig = field(default_factory=PerformanceMetricsConfig)
+    
 
     expriment_name: str = "Experiment"
     # method_name : Literal["BioHash", "AVET", "C_IOM"] = "BioHash"
@@ -85,11 +89,13 @@ class Experiment:
         self.dataset = self.config.dataset_config.setup()
         self.method = self.config.method_config.setup()
 
-        self.metrics:PerformanceMetrics = self.config.metrics_config.setup()
-        self.metrics.data_config = self.dataset.config
-        self.metrics.config.protected_template_dir = self.config._get_base_dir / "protected_template" 
+        self.verifier = self.config.verifier_config.setup()
+        self.verifier.data_config = self.dataset.config
+        self.verifier.config.protected_template_dir = self.config._get_base_dir / "protected_template" 
+        Path(self.verifier.config.protected_template_dir).mkdir(parents=True, exist_ok=True)
 
-        Path(self.metrics.config.protected_template_dir).mkdir(parents=True, exist_ok=True)
+        self.metrics:PerformanceMetrics = self.config.metrics_config.setup()
+        
         self.config.save_config()
 
         console.print(Panel.fit(str(self.config),
@@ -116,7 +122,7 @@ class Experiment:
             mean_time_generate_protected_template: float = self.perform_generating(seed=i)
 
             # 2. perform matching
-            genuine_similarity_list, impostor_similarity_list, mean_time_genuine, mean_time_impostor = self.metrics.perform_matching()
+            genuine_similarity_list, impostor_similarity_list, mean_time_genuine, mean_time_impostor = self.verifier.perform_matching()
 
             # 3. perform evaluation
             # 3.1 EER
@@ -257,11 +263,12 @@ if __name__ == "__main__":
 
     method_config = BioHashConfig()
     dataset_config = FaceDatasetConfig(dataset_name="LFW") 
-    metrics_config = PerformanceMetricsConfig(measure="euclidean")
-
+    verifier_config = VerifierConfig(measure="cosine")
+    metrics_config = PerformanceMetricsConfig()
     config = ExperimentConfig(
         method_config=method_config,
         dataset_config=dataset_config,
+        verifier_config=verifier_config,
         metrics_config=metrics_config
     )
 
