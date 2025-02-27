@@ -1,75 +1,80 @@
-from typing import Tuple,List
+from typing import Tuple, List
 import numpy as np
 
-def caculateVerificationRate(thr, genuine, impostor):
-    #计算错误接受率FAR:False Accept Rate
-    FA  = 0
-    for i in range(impostor.__len__()):
-        if impostor[i] >= thr:
-            FA = FA + 1
-    FAR = (FA / impostor.__len__())*100
-    #计算错误拒绝率FRR:False Reject Rate和真实接受率Genuine Accept Rate
-    FR = 0
-    GA = 0
-    for j in range(genuine.__len__()):
-        if genuine[j] < thr:
-            FR = FR + 1
-        elif genuine[j] > thr:
-            GA = GA + 1
-    FRR = (FR / genuine.__len__())*100
-    GAR = (GA / genuine.__len__())*100
-    #计算等错误率
-    TER = (FA + FR)/(genuine.__len__() + impostor.__len__())
-    #计算验证率Verification Rate
-    TSR = (1 - TER)*100
-    #print(TSR, FAR, FRR, GAR)
-    return TSR, FAR, FRR, GAR
+def calculateVerificationRate(threshold: float, genuine: List[float], impostor: List[float]) -> Tuple[float, float, float, float]:
+    """计算验证率相关指标
+    
+    Args:
+        threshold: 判定阈值
+        genuine: 真匹配相似度列表
+        impostor: 假匹配相似度列表
+    
+    Returns:
+        Tuple[float, float, float, float]: (验证率TSR, 错误接受率FAR, 错误拒绝率FRR, 真实接受率GAR)
+    """
+    # 将列表转换为numpy数组以进行向量化计算
+    genuine_arr = np.array(genuine)
+    impostor_arr = np.array(impostor)
+    
+    # 计算错误接受率FAR (False Accept Rate)
+    fa_count = float(np.sum(impostor_arr >= threshold))
+    far = float((fa_count / len(impostor)) )
+    
+    # 计算错误拒绝率FRR (False Reject Rate)和真实接受率GAR (Genuine Accept Rate)
+    fr_count = float(np.sum(genuine_arr < threshold))
+    ga_count = float(np.sum(genuine_arr > threshold))
+    
+    frr = float((fr_count / len(genuine)) )
+    gar = float((ga_count / len(genuine)) )
+    
+    # 计算总错误率TER (Total Error Rate)和验证率TSR (True Success Rate)
+    ter = float((fa_count + fr_count) / (len(genuine) + len(impostor)))
+    tsr = float((1 - ter) )
+    
+    return tsr, far, frr, gar
 
-def computePerformance(genuine, impostor, step,verbose=False)-> Tuple[float,float,List[int],List[int]]:
-    #查找迭代的起始值和终止值，以找到最优阈值。
-    start = np.min(genuine)
-    if np.min(impostor) < start:
-        start = np.min(impostor)
-    stop = max(impostor)
-    if np.max(genuine) > stop:
-        stop = np.max(genuine)
-    #计算每个阈值的TSR、FAR、FRR和GAR
-    mTSR = [0]
-    mFAR = [0]
-    mFRR = [0]
-    mGAR = [0]
-    y = []
-    x = []
-    z = []
-    s = []
-    mTSR[0], mFAR[0], mFRR[0], mGAR[0] = caculateVerificationRate(start, genuine, impostor)
-    thr_list = np.arange(start + step, stop, step)
-    #print(thr_list)
-    for i in range(thr_list.__len__()):
-        TSR, FAR, FRR, GAR = caculateVerificationRate(thr_list[i], genuine, impostor)
-        mTSR.append(TSR)
-        mFAR.append(FAR)
-        mFRR.append(FRR)
-        mGAR.append(GAR)
-        y.append(FRR)
-        x.append(FAR)
-        z.append(GAR)
-        s.append(TSR)
-        if verbose:
-            print('阈值thr：%.6f, FAR：%.6f, FRR：%.6f, TSR：%.6f' % (thr_list[i], FAR, FRR, TSR))
-
-    #找出FAR和FRR最接近的最优阈值
-    optimal_thr_index = np.argmin(np.abs(np.array(y) - np.array(x)))
-    optimal_thr = thr_list[optimal_thr_index]
-    EER = (y[optimal_thr_index] + x[optimal_thr_index]) / 2
+def computePerformance(genuine: List[float], impostor: List[float], step: float, verbose: bool = False) -> Tuple[float, float, List[float], List[float]]:
+    """计算性能指标和最优阈值
+    
+    Args:
+        genuine: 真匹配相似度列表
+        impostor: 假匹配相似度列表
+        step: 阈值搜索步长
+        verbose: 是否打印详细信息
+    
+    Returns:
+        Tuple[float, float, List[float], List[float]]: (等错误率EER, 最优阈值, FAR列表, GAR列表)
+    """
+    # 确定阈值搜索范围
+    start = float(min(np.min(genuine), np.min(impostor)))
+    stop = float(max(np.max(genuine), np.max(impostor)))
+    thresholds = np.arange(start, stop + step, step)
+    
+    # 存储各指标列表
+    metrics = [calculateVerificationRate(float(thr), genuine, impostor) for thr in thresholds]
+    tsr_list, far_list, frr_list, gar_list = zip(*metrics)
+    
+    # 将列表转换为numpy数组以便计算
+    far_arr = np.array(far_list)
+    frr_arr = np.array(frr_list)
+    
+    # 找出FAR和FRR最接近的最优阈值
+    diff = np.abs(frr_arr - far_arr)
+    optimal_idx = int(np.argmin(diff))
+    optimal_threshold = float(thresholds[optimal_idx])
+    
+    # 计算等错误率EER
+    eer = float((frr_arr[optimal_idx] + far_arr[optimal_idx]) / 2)
+    
     if verbose:
-        print('验证率Verification Rate：%.6f' % (s[optimal_thr_index]))
-        print('真实接受率Genuine Accept Rate：%.6f' % (z[optimal_thr_index]))
-        print('错误接受率False Accept Rate：%.6f' % (x[optimal_thr_index]))
-        print('错误拒绝率False Reject Rate：%.6f' % (y[optimal_thr_index]))
-        print('等错误率Equal Error Rate：%.6f' % (EER))
-
-
-    return  EER, optimal_thr,mFAR,mGAR
-
-
+        print(f'验证率 (Verification Rate): {tsr_list[optimal_idx]:.6f}')
+        print(f'真实接受率 (Genuine Accept Rate): {gar_list[optimal_idx]:.6f}')
+        print(f'错误接受率 (False Accept Rate): {far_arr[optimal_idx]:.6f}')
+        print(f'错误拒绝率 (False Reject Rate): {frr_arr[optimal_idx]:.6f}')
+        print(f'等错误率 (Equal Error Rate): {eer:.6f}')
+    
+    # 将元组转换为列表
+    far_list = list(map(float, far_list))
+    gar_list = list(map(float, gar_list))
+    
+    return eer, optimal_threshold, far_list, gar_list
