@@ -182,10 +182,9 @@ class Experiment:
             
         # 计算平均时间
         end_time = time.time()
+        if self.dataset.total_samples == 0:
+            return 0.0
         mean_time = (end_time - start_time) / self.dataset.total_samples
-        # print(f'生成{self.dataset.total_samples}个受保护模板的平均时间是：', mean_time)
-        
-        # 保存保护模板
         return mean_time
     
 
