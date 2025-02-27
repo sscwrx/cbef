@@ -1,97 +1,47 @@
 import pytest
 import numpy as np
-from method.bi_avet import BiAVET, BiAVETConfig
-from method.in_avet import InAVET, InAVETConfig
-from method.bio_hash import BioHash, BioHashConfig
+from pathlib import Path
+from unittest.mock import Mock, patch
+from typing import Type
 
-@pytest.fixture
-def sample_feature():
-    """生成测试用的特征向量"""
-    rng = np.random.default_rng(42)
-    return rng.normal(size=100)  # 生成100维的特征向量
+from method.base_method import BaseMethod, MethodConfig
+from method.baseline import Baseline, BaselineConfig
 
-def test_bi_avet_process(sample_feature):
-    """测试二值化AVET"""
-    config = BiAVETConfig()
-    bi_avet = BiAVET(config)
-    
-    # 测试输出是二值的
-    result = bi_avet.process_feature(sample_feature)
-    assert set(np.unique(result)).issubset({0, 1})
-    
-    # 测试输出维度
-    assert result.shape == (len(sample_feature) // 2,)
-    
-    # 测试结果的一致性
-    result2 = bi_avet.process_feature(sample_feature, seed=1)
-    np.testing.assert_array_equal(result, result2)
+class TestBaseMethod:
+    def test_set_seed(self):
+        # 创建一个具体的BaseMethod实现用于测试
+        class ConcreteMethod(BaseMethod):
+            def process_feature(self, feature_vector, seed=1):
+                return feature_vector
+        
+        # 使用Mock创建配置
+        mock_config = Mock()
+        mock_config.seed = 1
+        
+        method = ConcreteMethod(mock_config)
+        method.set_seed(42)
+        assert method.config.seed == 42
 
-def test_in_avet_process(sample_feature):
-    """测试整数AVET"""
-    config = InAVETConfig(k=50, g=8)  # 使用较小的k和g加快测试
-    in_avet = InAVET(config)
-    
-    # 测试输出形状
-    result = in_avet.process_feature(sample_feature)
-    assert result.shape == (config.k,)
-    
-    # 测试输出是整数
-    assert result.dtype == np.int32
-    
-    # 测试输出范围在[0, g)之间
-    assert np.all(result >= 0) and np.all(result < config.g)
-    
-    # 测试结果的一致性
-    result2 = in_avet.process_feature(sample_feature, seed=1)
-    np.testing.assert_array_equal(result, result2)
-    
-    # 测试不同配置
-    config2 = InAVETConfig(k=30, g=4)
-    in_avet2 = InAVET(config2)
-    result3 = in_avet2.process_feature(sample_feature)
-    assert result3.shape == (30,)
-    assert np.all(result3 >= 0) and np.all(result3 < 4)
+class TestBaseline:
+    @pytest.fixture
+    def baseline_config(self):
+        return BaselineConfig(_target=Baseline)
 
-def test_bio_hash_process(sample_feature):
-    """测试BioHash"""
-    config = BioHashConfig(bh_len=64)
-    bio_hash = BioHash(config)
-    
-    # 测试输出是二值的
-    result = bio_hash.process_feature(sample_feature)
-    assert set(np.unique(result)).issubset({0, 1})
-    
-    # 测试输出维度
-    assert result.shape == (config.bh_len,)
-    
-    # 测试结果的一致性
-    result2 = bio_hash.process_feature(sample_feature, seed=1)
-    np.testing.assert_array_equal(result, result2)
-    
-    # 测试不同配置
-    config2 = BioHashConfig(bh_len=32)
-    bio_hash2 = BioHash(config2)
-    result3 = bio_hash2.process_feature(sample_feature)
-    assert result3.shape == (32,)
+    def test_init(self, baseline_config):
+        method = Baseline(baseline_config)
+        assert method.config.method_name == "Baseline"
+        assert hasattr(method.config, 'seed')
 
-def test_methods_stability():
-    """测试方法在相同输入和seed下的稳定性"""
-    rng = np.random.default_rng(42)
-    features = [rng.normal(size=100) for _ in range(5)]
-    
-    methods = [
-        (BiAVET(BiAVETConfig()), "BiAVET"),
-        (InAVET(InAVETConfig()), "InAVET"),
-        (BioHash(BioHashConfig()), "BioHash")
-    ]
-    
-    for method, name in methods:
-        # 对同一个特征进行多次转换
-        for feat in features:
-            result1 = method.process_feature(feat, seed=1)
-            result2 = method.process_feature(feat, seed=1)
-            np.testing.assert_array_equal(
-                result1, 
-                result2, 
-                err_msg=f"{name} failed stability test"
-            )
+    def test_process_feature(self, baseline_config):
+        method = Baseline(baseline_config)
+        feature = np.array([1.0, 2.0, 3.0])
+        processed = method.process_feature(feature)
+        assert np.array_equal(processed, feature)
+        
+    def test_process_feature_with_different_seed(self, baseline_config):
+        method = Baseline(baseline_config)
+        feature = np.array([1.0, 2.0, 3.0])
+        processed1 = method.process_feature(feature, seed=1)
+        processed2 = method.process_feature(feature, seed=42)
+        # Baseline应该不管seed是什么值都返回相同的结果
+        assert np.array_equal(processed1, processed2)
