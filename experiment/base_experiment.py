@@ -7,7 +7,7 @@ from data.base_dataset import BaseDatasetConfig
 from data.face_dataset import FaceDatasetConfig
 from method.base_method import MethodConfig
 from method.bio_hash import BioHashConfig
-from metrics.performance.eer_metrics import EERMetrics, EERMetricsConfig
+from metrics.performance_metrics import PerformanceMetrics, PerformanceMetricsConfig
 from typing import Literal, Tuple,Union,Type ,Literal,Optional,List
 
 from tqdm import tqdm 
@@ -33,7 +33,7 @@ class ExperimentConfig:
     # 数据集配置 
     dataset_config: BaseDatasetConfig = field(default_factory=FaceDatasetConfig)
     # 评价指标配置
-    metrics_config: EERMetricsConfig = field(default_factory=EERMetricsConfig)
+    metrics_config: PerformanceMetricsConfig = field(default_factory=PerformanceMetricsConfig)
 
     expriment_name: str = "Experiment"
     # method_name : Literal["BioHash", "AVET", "C_IOM"] = "BioHash"
@@ -85,15 +85,16 @@ class Experiment:
         self.dataset = self.config.dataset_config.setup()
         self.method = self.config.method_config.setup()
 
-        self.metrics:EERMetrics = self.config.metrics_config.setup()
+        self.metrics:PerformanceMetrics = self.config.metrics_config.setup()
         self.metrics.data_config = self.dataset.config
         self.metrics.config.protected_template_dir = self.config._get_base_dir / "protected_template" 
+
         Path(self.metrics.config.protected_template_dir).mkdir(parents=True, exist_ok=True)
         self.config.save_config()
+
         console.print(Panel.fit(str(self.config),
                             title="[bold green]√ Experiment Configuration [/]",
                             border_style="green"))
-        
         logging.basicConfig(
             level=logging.INFO,
             format='%(message)s',
@@ -118,14 +119,26 @@ class Experiment:
             genuine_similarity_list, impostor_similarity_list, mean_time_genuine, mean_time_impostor = self.metrics.perform_matching()
 
             # 3. perform evaluation
+            # 3.1 EER
             best_eer ,best_threshold ,far_list,gar_list= self.metrics.perform_evaluation(genuine_similarity_list, impostor_similarity_list)
 
             best_eer_list.append(best_eer)
             best_threshold_list.append(best_threshold)
             mean_time_generate_protected_template_list.append(mean_time_generate_protected_template)
 
-
-            # self._print_result_table(i, mean_time_generate_protected_template, best_eer, best_threshold, mean_time_genuine, mean_time_impostor)
+            # 3.2 Decidability Index 
+            mean_genuine_similarity = np.mean(genuine_similarity_list)
+            std_genuine_simlarity = np.std(genuine_similarity_list)
+            mean_imposter_similarity = np.mean(impostor_similarity_list)
+            std_imposter_similarity = np.std(impostor_similarity_list)
+            assert std_genuine_simlarity != 0 or std_imposter_similarity != 0, "std_genuine_simlarity or std_imposter_similarity is zero"
+            DI = np.abs(mean_genuine_similarity - mean_imposter_similarity) / np.sqrt((std_genuine_simlarity+std_imposter_similarity)/2)
+            self._print_result_table(i,
+                                    mean_time_generate_protected_template,
+                                    best_eer, best_threshold,
+                                    DI,
+                                    mean_time_genuine,
+                                     mean_time_impostor)
         # 4. log the a full experiment result
         self._log_experiment_results(self.logger, 
                                      best_eer_list, 
@@ -207,7 +220,7 @@ class Experiment:
         logger.info(separator)
 
     def _print_result_table(self, i: int, mean_time_generate: float, eer: float, threshold: float, 
-                        mean_time_genuine: float =0.0, mean_time_impostor: float = 0.0) -> None:
+                        DI:float,mean_time_genuine: float =0.0, mean_time_impostor: float = 0.0) -> None:
         """打印实验结果表格
         
         Args:
@@ -215,35 +228,36 @@ class Experiment:
             mean_time_generate (float): 平均生成时间（秒）
             eer (float): 等错误率
             threshold (float): 最佳阈值
+            DI (float): Decidability Index
             mean_time_genuine (float, optional): 真匹配平均时间（秒）
             mean_time_impostor (float, optional): 假匹配平均时间（秒）
         """
         method_name = self.config.method_config.method_name
         dataset_name = self.config.dataset_config.dataset_name
+        # Create result table
+        table = Table(title=f"{method_name} on {dataset_name} \n Experiment ({i}/{self.config.expriment_times}) result, ", 
+                show_header=True, header_style="bold magenta")
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", justify="right", style="green")
         
-        # 创建结果表格
-        table = Table(title=f"{method_name} on {dataset_name} \n Expriment ({i}/{self.config.expriment_times}) result, ", 
-                    show_header=True, header_style="bold magenta")
-        table.add_column("指标", style="cyan")
-        table.add_column("数值", justify="right", style="green")
+        table.add_row("Mean Generation Time", f"{mean_time_generate*1000:.3f}ms")  # mean_time is in seconds
         
-        table.add_row("平均生成时间", f"{mean_time_generate*1000:.3f}ms")  # mean_time 原单位就是秒
-        
-        # 如果提供了匹配时间，则添加到表格中
+        # Add matching times if provided
         if mean_time_genuine is not None:
-            table.add_row("真匹配平均时间", f"{mean_time_genuine*1000:.3f}ms")
+            table.add_row("Mean Genuine Match Time", f"{mean_time_genuine*1000:.3f}ms")
         if mean_time_impostor is not None:
-            table.add_row("假匹配平均时间", f"{mean_time_impostor*1000:.3f}ms")
+            table.add_row("Mean Impostor Match Time", f"{mean_time_impostor*1000:.3f}ms")
             
-        table.add_row("等错误率(EER)", f"{eer:.2f}%")  # EER 直接就是百分数
-        table.add_row("最佳阈值", f"{threshold:.4f}")
+        table.add_row("Equal Error Rate (EER)", f"{eer:.2f}%")  # EER is already percentage
+        table.add_row("Optimal Threshold", f"{threshold:.4f}")
+        table.add_row("Decidability Index (DI)", f"{DI:.4f}")
         console.print(table)
 
 if __name__ == "__main__":
 
     method_config = BioHashConfig()
     dataset_config = FaceDatasetConfig(dataset_name="LFW") 
-    metrics_config = EERMetricsConfig(measure="euclidean")
+    metrics_config = PerformanceMetricsConfig(measure="euclidean")
 
     config = ExperimentConfig(
         method_config=method_config,
