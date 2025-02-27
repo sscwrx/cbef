@@ -25,7 +25,7 @@ class FaceDataset(BaseDataset):
         self.config = config
         assert self.config.dataset_name is not None, "Dataset name must be provided."
         assert Path(self.config.embeddings_dir / self.config.dataset_name).exists(), "Embeddings directory does not exist."
-    def load_data(self):
+    def load_data(self) -> Dict[Tuple[int, int], NDArray]:
         """Load the data."""
         embeddings_dict:Dict[Tuple[int,int],NDArray] = {}
         specific_dir = self.config.embeddings_dir / str(self.config.dataset_name) 
