@@ -87,6 +87,8 @@ class Experiment:
     def __init__(self, config: ExperimentConfig):
         self.config = config
         self.dataset = self.config.dataset_config.setup()
+        self.data = self.dataset.load_data()
+
         self.method = self.config.method_config.setup()
 
         self.verifier = self.config.verifier_config.setup()
@@ -157,13 +159,11 @@ class Experiment:
         # 重置方法种子,并且生成或更新参数，这样就不用在每次生成模板的时候都重新生成参数
         self.method.set_seed(seed)
 
-        # 加载数据
-        data = self.dataset.load_data()
 
         # 初始化计时
         start_time = time.time()
         # 令牌被盗场景
-        for key, embedding in data.items():
+        for key, embedding in self.data.items():
             identy_id, sample_id = key 
             protected_template = self.method.process_feature(embedding)
             save_dir = self.config._get_base_dir / f"protected_template"
