@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from sklearn.metrics import auc
 import numpy as np
-import datetime
+from datetime import datetime
 def plot_roc_curve(self, far_list, gar_list, title=None, experiment_num=None):
     """
     绘制ROC曲线并保存到实验输出目录

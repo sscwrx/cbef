@@ -142,6 +142,7 @@ class PerformanceMetrics:
         Returns:
             Tuple[float, float, float]: EER, 最佳阈值, 最佳阈值对应的FAR
         """
+        assert len(genuine_similarity_list)>0 or len(impostor_similarity_list)>0, "No similarity data provided"
         best_eer, best_thrshold,far_list,gar_list = CalculateVerificationRate.computePerformance(genuine_similarity_list, impostor_similarity_list,step=0.001)
         return best_eer, best_thrshold,far_list,gar_list
     
