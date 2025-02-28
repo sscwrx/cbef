@@ -9,7 +9,7 @@ This repository implements various biometric template protection methods and an 
 Clone the repository:
 
 ```bash
-git clone https://gitee.com/futurecodes/avet.git
+git clone https://github.com/sscwrx/cbef.git
 ```
 
 Install dependencies:
