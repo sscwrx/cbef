@@ -1,6 +1,6 @@
 # 生物特征模板保护方法评估框架
 
- [中文](README_cn.md) | [English](README_en.md)
+ [中文](README_cn.md) | [English](README.md)
 
 这个仓库实现了多种生物特征模板保护方法和评估框架。
 
@@ -9,7 +9,7 @@
 克隆仓库：
 
 ```bash
-git clone https://gitee.com/futurecodes/avet.git
+git clone https://github.com/sscwrx/cbef.git
 ```
 
 安装依赖：
